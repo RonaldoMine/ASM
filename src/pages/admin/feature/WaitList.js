@@ -9,7 +9,7 @@ function WaitList() {
 
     const fetchWaitlist = () => {
 
-        return axios.get("http://localhost:4000/tickets?resolved=false&closed_at=")
+        return axios.get("http://192.168.100.17:4000/tickets?resolved=false&closed_at=")
     }
 
     const { data: waitlist } = useQuery("waitlist", fetchWaitlist)

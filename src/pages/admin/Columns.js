@@ -9,7 +9,7 @@ export const columns = [
         title: 'Intitulé',
         dataIndex: 'title',
         key: 'title',
-        render: text => <Link to=''>{text}</Link>,
+        render: (text, record) => <Link to={`ticket/${record.id}`}>{text}</Link>,
     },
     {
         title: 'Description',

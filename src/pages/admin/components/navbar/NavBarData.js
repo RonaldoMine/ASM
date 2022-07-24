@@ -5,6 +5,8 @@ import CustomDropdown from "./DropdownAccount/CustomDropdown";
 import { Typography } from 'antd';
 
 const { Title } = Typography;
+
+// Menu of Notifications
 const bellMenu = [
     {
         label: <Title level={5}>Notification appear here</Title>,
@@ -18,6 +20,7 @@ const bellMenu = [
         key: '2',
     },
 ];
+// Profile Menu
 const profileMenu = [
     {
         label: <Title level={5}>ACCOUNT</Title>,
@@ -25,7 +28,7 @@ const profileMenu = [
         type: 'group',
     },
     {
-        label: (<div><Avatar>R</Avatar> <p>ronaldo9092 <br/><small>ronaldo@gmail.com</small></p></div> ),
+        label: (<div><Avatar>R</Avatar> <p>ronaldo9092 <br/><small>ronaldo@gmail.com</small></p></div>),
         key: '1',
     },
     {
