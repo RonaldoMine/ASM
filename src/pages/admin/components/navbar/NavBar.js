@@ -19,7 +19,7 @@ const NavBar = () => {
         if(form.isFieldsTouched(["title", "description"])){
             Modal.confirm({
                 title: 'Annuler la création de ticket',
-                icon: <ExclamationCircleOutlined />,
+                icon: <ExclamationCircleOutlined/>,
                 content: 'Voulez-vous continuez et perdre ces changements ?',
                 okText: 'Oui',
                 style: {position: 'relative', top: 'calc(100vh - 68%)'},
