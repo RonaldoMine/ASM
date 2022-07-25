@@ -9,13 +9,14 @@ export const columns = [
         title: 'Intitulé',
         dataIndex: 'title',
         key: 'title',
-        render: (text, record) => <Link to={`ticket/${record.id}`}>{text}</Link>
+        render: text => <Link to=''>{text}</Link>,
     },
     {
         title: 'Description',
         dataIndex: 'description',
         key: 'description',
     },
+    
     {
         title: 'Emetteur',
         dataIndex: 'reporter',
@@ -31,13 +32,14 @@ export const columns = [
             )
         }
     },
+    
     {
         title: 'Statut',
         dataIndex: 'status',
         key: 'status',
         render: (status) => {
             return (
-                <Select defaultValue={status} style={{ width: "98px" }}>
+                <Select defaultValue={status} style={{width: "98px"}}>
                     <Option value="Nouveau">Nouveau</Option>
                     <Option value="Assigné">Assigné</Option>
                     <Option value="En cours">En cours</Option>

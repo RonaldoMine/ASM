@@ -40,7 +40,6 @@ const SideBar = () => {
                 mode="inline"
                 defaultSelectedKeys={['sub00']}
                 defaultOpenKeys={['item0']}
-                triggerSubMenuAction="click"
                 onSelect={e => navigate(e.item.props.path)}
                 style={{ height: '100%', borderRight: 0 }}
                 items={items2}

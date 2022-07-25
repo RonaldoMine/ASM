@@ -8,15 +8,17 @@ import { useUpdateStatus } from './hooks/useUpdateStatus';
 
 const { Option } = Select;
 
-function WaitList() {
+function AgentTickets() {
 
-    const fetchWaitlist = () => {
-        return axios.get("http://localhost:4000/tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo")
+    const fetchAgentTickets = () => {
+
+        return axios.get("http://localhost:4000/tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo&author_id=3")
     }
 
     const { mutate: updateState } = useUpdateStatus();
 
-    const { data: waitlist } = useQuery("waitlist", fetchWaitlist)
+    const { data: mytickets } = useQuery("mytickets", fetchAgentTickets)
+
 
     //Columns
     const columns = [
@@ -24,13 +26,12 @@ function WaitList() {
             title: 'Intitulé',
             dataIndex: 'title',
             key: 'title',
-            render: (text, record) => <Link to={`ticket/${record.id}`}>{text}</Link>
+            render: text => <Link to=''>{text}</Link>,
         },
         {
             title: 'Description',
             dataIndex: 'description',
             key: 'description',
-            render: (text) => <p>{new DOMParser().parseFromString(text, 'text/html').body.textContent}</p>
         },
 
         {
@@ -41,7 +42,7 @@ function WaitList() {
         {
             title: 'Attribuer à',
             dataIndex: 'assignee',
-            key: 'assignee'
+            key: 'assignee',
         },
 
         {
@@ -91,15 +92,18 @@ function WaitList() {
             key: 'created_at',
         }
     ];
+
+
+
     return (
         <>
             <PageHeader
                 title="Tous les tickets"
             />
-            <Table columns={columns} rowSelection={{ type: 'checkbox' }} rowKey="id" dataSource={waitlist?.data} className="all-tickets_table" scroll={{ x: "true" }} />
+            <Table columns={columns} rowSelection={{ type: 'checkbox' }} rowKey="id" dataSource={mytickets?.data} className="all-tickets_table" scroll={{ x: "true" }} />
 
         </>
     )
 }
 
-export default WaitList
+export default AgentTickets

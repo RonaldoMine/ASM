@@ -1,0 +1,34 @@
+.header-container{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  background-color: #fff;
+}
+
+.header-container::after{
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 0.25px;
+    background: transparent;
+    box-shadow: 1px 2px 6px #bbb;
+
+}
+
+.header_left {
+    display: flex;
+    align-items: center;
+}
+
+.header_left .header_left_company-name {
+    display: inline-block;
+    font-size: 1.2rem;
+    margin-left: 1rem;
+    
+}
+
+.header_left .header_left_company-name{
+    margin-right: 1.5rem;
+}

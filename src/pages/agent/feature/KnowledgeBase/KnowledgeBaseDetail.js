@@ -19,7 +19,7 @@ function KnowledgeBaseDetail() {
                 title={article.article}
                 extra={[
                     <Tooltip key="edit" title="Modifier"><Link to={`/admin/info/knowledge_base/edit/${id}`}><EditOutlined/></Link> </Tooltip>,
-                    <Tooltip key="delete" title="Fermer"><Button danger type="link" onClick={() => {
+                    <Tooltip key="delete" title="Supprimer"><Button danger type="link" onClick={() => {
                     }} icon={<DeleteOutlined/>}></Button> </Tooltip>]}
             />
             <div className="userCreate"><Avatar>R</Avatar>

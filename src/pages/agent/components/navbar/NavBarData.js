@@ -7,7 +7,7 @@ import { Typography } from 'antd';
 const { Title } = Typography;
 
 // Menu of Notifications
-export const bellMenu = [
+const bellMenu = [
     {
         label: <Title level={5}>Notification appear here</Title>,
         key: '0',
@@ -21,7 +21,7 @@ export const bellMenu = [
     },
 ];
 // Profile Menu
-export const profileMenu = [
+const profileMenu = [
     {
         label: <Title level={5}>ACCOUNT</Title>,
         key: '0',

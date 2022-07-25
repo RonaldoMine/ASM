@@ -1,16 +1,15 @@
 import {Button, PageHeader, Table} from 'antd';
-import React, {useEffect, useState} from "react";
+import {datas} from '../../../../mockdata/KnowledgeBaseData'
+import React, {useState} from "react";
 import {Link} from "react-router-dom";
 import 'braft-editor/dist/index.css'
 import Search from "antd/es/input/Search";
-import axios from "axios";
-import {useQuery} from "react-query";
 
 export const columns = [
     {
         title: 'Article',
-        dataIndex: 'title',
-        key: 'title',
+        dataIndex: 'article',
+        key: 'article',
         render: (text, record) => <Link to={`detail/${record.id}`}>{text}</Link>,
     },
     {
@@ -31,27 +30,20 @@ export const columns = [
 ];
 
 function KnowledgeBaseList() {
-    // Hooks
-    let [filtered, setFiltered] = useState([]);
-    const fetchArticle = () => {
-        return axios.get("http://localhost:4000/kb_article?knowledgeBase_id=2")
-
-    }
-    const {data: articles} = useQuery(["articles", "2"], fetchArticle)
-
-    useEffect(() => {
-        setFiltered(articles?.data);
-    }, [articles])
     // # Funtions
     // Search In table
-
     const onSearch = (value) => {
+        let filtered;
         if (value !== '') {
-            setFiltered(articles?.data.filter((data) => value === "" || data.content.toLowerCase().includes(value.toLowerCase())))
+            filtered = datas.filter((data) => value === "" || data.article.toLowerCase().includes(value.toLowerCase()))
         } else {
-            setFiltered(articles?.data);
+            filtered = datas;
         }
+        setDatas(filtered);
     };
+
+    // Hooks
+    const [datasState, setDatas] = useState(datas);
 
     return (
         <>
@@ -64,7 +56,7 @@ function KnowledgeBaseList() {
                 quisquam velit voluptatibus?
                 Lorem ipsum dolor sit amet, consectetur adipisicing elit. </p>
             <Search placeholder="Recherche" onSearch={onSearch} style={{width: 300, marginBottom: 20}}/>
-            <Table columns={columns} rowSelection={{type: 'checkbox'}} rowKey="id" dataSource={filtered}
+            <Table columns={columns} rowSelection={{type: 'checkbox'}} rowKey="id" dataSource={datasState}
                    className="all-knowledgebase_table" scroll={{x: "true"}}/>
 
             {/*Modal */}

@@ -1,56 +1,41 @@
 //imports
-import React, {useState} from 'react'
-import {Avatar, Button, Form, Input, Layout, message, Modal, Select, Space} from 'antd'
+import React, { useState } from 'react'
+import { Button, Form, Input, Layout, Modal, Select } from 'antd'
+import { Menu } from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
-import {bellMenu, profileMenu} from './NavBarData';
-import {BellFilled, ExclamationCircleOutlined, UserOutlined} from '@ant-design/icons';
-import {useAddTickets} from '../../feature/hooks/useAddTickets';
-import CustomDropdown from './DropdownAccount/CustomDropdown';
+import { NavBarData } from './NavBarData';
+import { useAddTickets } from '../../feature/hooks/useAddTickets';
 
 //instanciations
 const { Header } = Layout;
 const { Option } = Select;
 
+
+
+//Navbar data
+const items1 = NavBarData.map(elmt => ({
+    key: elmt.key,
+    itemIcon: elmt.icon,
+}));
+
 const NavBar = () => {
 
     //Functions
     const handleCancel = () => {
-        if(form.isFieldsTouched(["title", "description"])){
-            Modal.confirm({
-                title: 'Annuler la création de ticket',
-                icon: <ExclamationCircleOutlined />,
-                content: 'Voulez-vous continuez et perdre ces changements ?',
-                okText: 'Oui',
-                style: {position: 'relative', top: 'calc(100vh - 68%)'},
-                cancelText: 'Non',
-                onOk: () => {
-                    form.resetFields()
-                    setIsOpen(false);
-                },
-                onCancel: () => {
-                    setIsOpen(true);
-                }
-            }); 
-        } else {
-            form.resetFields()
-            setIsOpen(false)
-        }
+        form.resetFields()
+        setIsOpen(false);
     };
 
     //Create Ticket
     const handleCreate = () => {
         setConfirmLoading(true);
-        form.validateFields()
-        .then(value => {
-            addTicket({ ...value, resolved: "false", closed_at: "" });
-            form.resetFields()
-            setIsOpen(false);
-            setConfirmLoading(false);
-        }).catch(() => {
-            message.error("Ticket non créé");
-            setConfirmLoading(false);
-        })
+        let ticket = form.getFieldsValue();
+        addTicket({ ...ticket, resolved: "false", closed_at: "" });
+        form.resetFields()
+        setIsOpen(false);
+        setConfirmLoading(false);
+
     };
 
     //Hooks
@@ -62,6 +47,7 @@ const NavBar = () => {
 
     return (
         <Header className="header-container" /*style={{ position: 'fixed', zIndex: 1, width: '100%' }}*/>
+
             {/*Header left side */}
             <div className="header_left">
                 <img src={logo} alt="Logo Afriland" width={50} height={40} />
@@ -100,7 +86,6 @@ const NavBar = () => {
                     <Form.Item
                         label="Émetteur"
                         name="reporter"
-
                         initialValue={"Yvan Dipoko"}
                     >
                         <Input disabled />
@@ -187,13 +172,9 @@ const NavBar = () => {
             {/*Modal */}
 
             {/*Header right side */}
-            {/* <Menu items={items1} theme="light" mode="horizontal"
-                className="header_right" /> */}
+            <Menu items={items1} theme="light" mode="horizontal"
+                className="header_right" />
 
-            <Space size={"large"}>
-                <CustomDropdown menuDatas={bellMenu} icon={<BellFilled style={{ fontSize: "22px" }} />}/>
-                <CustomDropdown menuDatas={profileMenu} icon={<Avatar style={{ marginBottom: '8px' }} icon={<UserOutlined />} />}/>
-            </Space>
         </Header>
     )
 }
