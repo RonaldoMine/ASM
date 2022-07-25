@@ -31,6 +31,7 @@ function WaitList() {
             title: 'Description',
             dataIndex: 'description',
             key: 'description',
+            render: (text) => <p>{new DOMParser().parseFromString(text, 'text/html').body.textContent}</p>
         },
 
         {

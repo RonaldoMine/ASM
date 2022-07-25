@@ -1,30 +1,36 @@
 import {useNavigate, useParams} from "react-router-dom";
 import {
+    Avatar,
     Button,
+    Card,
     Col,
     Collapse,
     Comment,
-    Form, List,
+    Form,
+    Input,
+    List,
+    message,
     PageHeader,
     Row,
     Segmented,
     Select,
     Space,
+    Timeline,
     Tooltip,
-    Input,
-    Typography, Avatar, Timeline, Card, message
+    Typography
 } from "antd";
 import {DeleteOutlined, SmileOutlined} from "@ant-design/icons";
-import {useState, useEffect} from "react";
+import {useEffect, useState} from "react";
 import BraftEditor from "braft-editor";
-import moment from "moment";
-import CustomAvatarUser from "../CustomAvatarUser";
-import { useGetTicketData } from "../hooks/useGetTicketData";
-import { useEditStatus } from "../hooks/useEditStatus";
+import CustomAvatarUser from "../../components/custom/CustomAvatarUser";
+import {useGetTicketData} from "../hooks/useGetTicketData";
+import {useEditStatus} from "../hooks/useEditStatus";
 import axios from "axios";
-import { useQuery } from "react-query";
-import { useEditTicketTitleAndDescription } from "../hooks/useEditTicketTitleAndDescription";
-import { useUpdateStatus } from "../hooks/useUpdateStatus";
+import {useQuery} from "react-query";
+import {useEditTicketTitleAndDescription} from "../hooks/useEditTicketTitleAndDescription";
+import {useUpdateStatus} from "../hooks/useUpdateStatus";
+import CustomLoader from "../../components/custom/CustomLoader";
+import {useAddComment} from "../hooks/useAddComment";
 
 const {Panel} = Collapse;
 const {TextArea} = Input;
@@ -33,23 +39,24 @@ function TicketDetail() {
     //Hooks
     const {ticketId} = useParams();
 
-    const { data: ticket, isError, isLoading } = useGetTicketData(ticketId);
-    const { mutate: editTitleandDescription } = useEditTicketTitleAndDescription();
-    const { mutate: editStatus } = useEditStatus();
+    const {data: ticket, isLoading} = useGetTicketData(ticketId);
+    const {mutate: editTitleandDescription} = useEditTicketTitleAndDescription();
+    const {mutate: addComment} = useAddComment();
+    const {mutate: editStatus} = useEditStatus();
 
     const fetchTicketComment = () => {
 
         return axios.get(`http://localhost:4000/comments?ticket_id=${ticketId}`)
     }
 
-    const { data: ticketCommentData } = useQuery(["ticketComment", ticketId], fetchTicketComment)
-    const { mutate: updateState } = useUpdateStatus();
+    const {data: ticketCommentData} = useQuery(["ticketComment", ticketId], fetchTicketComment)
+    const {mutate: updateState} = useUpdateStatus();
 
     useEffect(() => {
         setEditableTitle(ticket?.data.title)
-    
+
     }, [ticket?.data.title])
-    
+
 
     const [form] = Form.useForm();
     let navigate = useNavigate();
@@ -60,7 +67,7 @@ function TicketDetail() {
     const [comment, setComment] = useState(''); // Value Comment
     const [title, setEditableTitle] = useState(""); // Manage Typography editable
     const [activity, setActivity] = useState("Commentaires"); // Manage segmented
-    
+
 
     //Data
     // let ticket = {
@@ -87,7 +94,7 @@ function TicketDetail() {
 
     //Close Ticket
     const closeTicket = () => {
-        updateState({ id: ticketId, status: "Fermé" })
+        updateState({id: ticketId, status: "Fermé"})
         navigate(-1);
         message.success("Ticket fermé");
     }
@@ -96,60 +103,40 @@ function TicketDetail() {
     const CommentList = ({comments}) => (
         <List
             dataSource={comments}
-            header={`${comments.length} ${comments.length > 1 ? 'commentaires' : 'commentaire'}`}
+            header={`${comments.length} ${comments.length > 1 ? 'commentaires' : comments.length <= 1 && 'commentaire'}`}
             itemLayout="horizontal"
-            renderItem={(props) => <Comment {...props} />}
+            renderItem={(props) => <Comment avatar={<Avatar style={{ background: "#1890ff", color: "#fff"}}>{props.author[0]}</Avatar>} {...props} />}
         />
-    );
-    //Form comment
-    const Editor = ({onChange, onSubmit, submitting, value}) => (
-        <>
-            <Form.Item>
-                <TextArea rows={4} style={{resize: "none"}} onChange={onChange} value={value}/>
-            </Form.Item>
-            <Form.Item>
-                <Button htmlType="submit" loading={submitting} onClick={onSubmit} type="primary">
-                    Commenter
-                </Button>
-            </Form.Item>
-        </>
     );
 
     //Submit form comment
     const handleSubmitComment = () => {
         if (!comment) return;
         setSubmitting(true);
-        setTimeout(() => {
-            setSubmitting(false);
-            setComment('');
-            setComments([
-                ...comments,
-                {
-                    author: 'Han Solo',
-                    avatar: 'https://joeschmoe.io/api/v1/random',
-                    content: <p>{comment}</p>,
-                    datetime: moment().fromNow(),
-                },
-            ]);
-        }, 1000);
+        setComment('');
+        let data = {ticket_id: ticketId, content: comment, author: 'John Doe', created_At: Date.now()}
+        addComment(data);
+        setSubmitting(false);
     };
 
     //Submit Edit Ticket Form
     const submitForm = (fields) => {
         let {description} = fields;
-        editTitleandDescription({id: ticketId, title: title, description: description})
+        editTitleandDescription({id: ticketId, title: title, description: description.toHTML()})
         message.success("Modification prise en compte");
-        
+
     }
     //Event change content comment value
     const handleChangeComment = (e) => {
         setComment(e.target.value);
     };
+    if (isLoading) return (<CustomLoader/>)
     return (
         <>
             <PageHeader
                 onBack={() => navigate(-1)}
-                extra={[<Tooltip key="delete" title="Fermer"><Button danger type="link" onClick={closeTicket} icon={<DeleteOutlined/>}></Button> </Tooltip>]}
+                extra={[<Tooltip key="delete" title="Fermer"><Button danger type="link" onClick={closeTicket}
+                                                                     icon={<DeleteOutlined/>}></Button> </Tooltip>]}
             />
             <Row>
                 <Col span={16} style={{paddingRight: 70}}>
@@ -165,10 +152,11 @@ function TicketDetail() {
                             }} level={4}>{title}</Typography.Title>
                         <Form.Item label="Description" name="description"
                                    rules={[{required: true, message: "Insérez la description de l'article"}]}
-                            initialValue={ticket?.data.description}
+                                   initialValue={BraftEditor.createEditorState(ticket?.data.description)}
                         >
-
-                            <TextArea rows={4} style={{ resize: "none" }} />
+                            <BraftEditor language="fr"
+                                         contentStyle={{height: 200, boxShadow: 'inset 0 1px 3px rgba(0,0,0,.1)'}}
+                                         onChange={onChangeBraft} fixPlaceholder={true}/>
                         </Form.Item>
                         <Form.Item>
                             <Button htmlType="submit" loading={submittingForm} type="primary">
@@ -181,16 +169,21 @@ function TicketDetail() {
                         <Segmented options={['Commentaires', 'Historique']} onChange={(value) => setActivity(value)}/>
                         {activity === "Commentaires" ?
                             <div className="comments">
-                                {ticketCommentData?.data.length > 0 && <CommentList comments={ticketCommentData?.data}/>}
+                                {<CommentList comments={ticketCommentData?.data}/>}
                                 <Comment
-                                    avatar={<Avatar alt="Profile Photo"/>}
                                     content={
-                                        <Editor
-                                            onChange={(e)=>handleChangeComment(e)}
-                                            onSubmit={handleSubmitComment}
-                                            submitting={submittingComment}
-                                            value={comment}
-                                        />
+                                        (<>
+                                            <Form.Item>
+                                                <TextArea key="textareaComment" rows={4} style={{resize: "none"}}
+                                                          onChange={handleChangeComment} value={comment}/>
+                                            </Form.Item>
+                                            <Form.Item>
+                                                <Button htmlType="submit" loading={submittingComment}
+                                                        onClick={handleSubmitComment} type="primary">
+                                                    Commenter
+                                                </Button>
+                                            </Form.Item>
+                                        </>)
                                     }
                                 />
                             </div> :
@@ -231,9 +224,9 @@ function TicketDetail() {
                 <Col span={8} style={{padding: 5}}>
                     <div>
                         <Select defaultValue={ticket?.data.status} style={{width: 120, marginBottom: 15}}
-                            onChange={(status) => {
-                                editStatus({ id: ticket?.data.id, status: status })
-                            }}>
+                                onChange={(status) => {
+                                    editStatus({id: ticket?.data.id, status: status})
+                                }}>
                             <Select.Option value="Assigné">Assigné</Select.Option>
                             <Select.Option value="En cours">En cours</Select.Option>
                             <Select.Option value="Résolu">Résolu</Select.Option>
