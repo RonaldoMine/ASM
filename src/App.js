@@ -11,6 +11,7 @@ import KnowledgeBaseDetail from "./pages/admin/feature/KnowledgeBase/KnowledgeBa
 import KnowledgeBaseEdit from "./pages/admin/feature/KnowledgeBase/KnowledgeBaseEdit";
 import KnowledgeBaseAdd from "./pages/admin/feature/KnowledgeBase/KnowledgeBaseAdd";
 import TicketDetail from "./pages/admin/feature/Ticket/TicketDetail";
+import ArchiveAdmin from './pages/admin/feature/Ticket/ArchiveAdmin';
 
 
 
@@ -26,6 +27,7 @@ function App() {
         </Route>
         <Route path="/admin" element={<Admin />}>
           <Route index element={<WaitList />} />
+          <Route path="/admin/archives" element={<ArchiveAdmin />} />
           <Route path="ticket/:ticketId" element={<TicketDetail />} />
           <Route path="info/knowledge_base">
             <Route index element={<KnowledgeBaseList />} />

@@ -86,11 +86,6 @@ function WaitList() {
             key: 'category',
         },
         {
-            title: 'Impact',
-            dataIndex: 'impact',
-            key: 'impact',
-        },
-        {
             title: 'Émis le',
             dataIndex: 'created_at',
             key: 'created_at',

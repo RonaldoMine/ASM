@@ -1,12 +1,13 @@
 //imports
 import React, { useState } from 'react'
-import { Button, Form, Input, Layout, message, Modal, Select } from 'antd'
+import { Button, Form, Input, Layout, message, Modal, Select, Avatar, Space } from 'antd'
 import { Menu } from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
-import { NavBarData } from './NavBarData';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { bellMenu, NavBarData, profileMenu } from './NavBarData';
+import { ExclamationCircleOutlined, BellFilled, UserOutlined } from '@ant-design/icons';
 import { useAddTickets } from '../../feature/hooks/useAddTickets';
+import CustomDropdown from './DropdownAccount/CustomDropdown';
 
 //instanciations
 const { Header } = Layout;
@@ -113,7 +114,7 @@ const NavBar = () => {
                     <Form.Item
                         label="Émetteur"
                         name="reporter"
-                        initialValue={"Moi"}
+                        initialValue={"Yvan Dipoko"}
                     >
                         <Input disabled />
                     </Form.Item>
@@ -137,6 +138,14 @@ const NavBar = () => {
                         label="Statut"
                         name="status"
                         initialValue={"Nouveau"}
+                    >
+                        <Input disabled />
+                    </Form.Item>
+
+                    <Form.Item
+                        label="Département"
+                        name="department"
+                        initialValue={"DSI"}
                     >
                         <Input disabled />
                     </Form.Item>
@@ -191,9 +200,13 @@ const NavBar = () => {
             {/*Modal */}
 
             {/*Header right side */}
-            <Menu items={items1} theme="light" mode="horizontal"
-                className="header_right" />
+            {/* <Menu items={items1} theme="light" mode="horizontal"
+                className="header_right" /> */}
 
+            <Space size={"large"}>
+                <CustomDropdown menuDatas={bellMenu} icon={<BellFilled style={{ fontSize: "22px" }} />}/>
+                <CustomDropdown menuDatas={profileMenu} icon={<Avatar style={{ marginBottom: '8px' }} icon={<UserOutlined />} />}/>
+            </Space>
         </Header>
     )
 }

@@ -6,7 +6,7 @@ const fetchTicketData = ({ queryKey }) => {
     return axios.get(`http://localhost:4000/tickets/${ticketId}`)
 }
 
-export const useEditTicketData = (ticketId) => {
+export const useGetTicketData = (ticketId) => {
 
     const qc = useQueryClient();
 

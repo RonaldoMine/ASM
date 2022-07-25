@@ -19,11 +19,12 @@ import {useState, useEffect} from "react";
 import BraftEditor from "braft-editor";
 import moment from "moment";
 import CustomAvatarUser from "../CustomAvatarUser";
-import { useEditTicketData } from "../hooks/useGetTicketData";
+import { useGetTicketData } from "../hooks/useGetTicketData";
 import { useEditStatus } from "../hooks/useEditStatus";
 import axios from "axios";
 import { useQuery } from "react-query";
 import { useEditTicketTitleAndDescription } from "../hooks/useEditTicketTitleAndDescription";
+import { useUpdateStatus } from "../hooks/useUpdateStatus";
 
 const {Panel} = Collapse;
 const {TextArea} = Input;
@@ -32,7 +33,7 @@ function TicketDetail() {
     //Hooks
     const {ticketId} = useParams();
 
-    const { data: ticket, isError, isLoading } = useEditTicketData(ticketId);
+    const { data: ticket, isError, isLoading } = useGetTicketData(ticketId);
     const { mutate: editTitleandDescription } = useEditTicketTitleAndDescription();
     const { mutate: editStatus } = useEditStatus();
 
@@ -42,6 +43,7 @@ function TicketDetail() {
     }
 
     const { data: ticketCommentData } = useQuery(["ticketComment", ticketId], fetchTicketComment)
+    const { mutate: updateState } = useUpdateStatus();
 
     useEffect(() => {
         setEditableTitle(ticket?.data.title)
@@ -72,6 +74,7 @@ function TicketDetail() {
     //     category: "Infrastructure",
     //     impact: "Crustial",
     // };
+
     //Function
     //Event change Braft Editor
     const onChangeBraft = (value) => {
@@ -81,6 +84,14 @@ function TicketDetail() {
             form.setFieldsValue({'description': ""})
         }
     };
+
+    //Close Ticket
+    const closeTicket = () => {
+        updateState({ id: ticketId, status: "Fermé" })
+        navigate(-1);
+        message.success("Ticket fermé");
+    }
+
     //Display comments
     const CommentList = ({comments}) => (
         <List
@@ -138,8 +149,7 @@ function TicketDetail() {
         <>
             <PageHeader
                 onBack={() => navigate(-1)}
-                extra={[<Tooltip key="delete" title="Supprimer"><Button danger type="link" onClick={() => {
-                }} icon={<DeleteOutlined/>}></Button> </Tooltip>]}
+                extra={[<Tooltip key="delete" title="Fermer"><Button danger type="link" onClick={closeTicket} icon={<DeleteOutlined/>}></Button> </Tooltip>]}
             />
             <Row>
                 <Col span={16} style={{paddingRight: 70}}>
