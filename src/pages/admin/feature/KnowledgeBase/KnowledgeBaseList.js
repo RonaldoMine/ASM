@@ -20,13 +20,13 @@ export const columns = [
     },
     {
         title: 'Vues',
-        dataIndex: 'numberOfViews',
-        key: 'numberOfViews',
+        dataIndex: 'number_of_views',
+        key: 'number_of_views',
     },
     {
         title: 'Dernière mise à jour',
-        dataIndex: 'updated_At',
-        key: 'updated_At',
+        dataIndex: 'updated_at',
+        key: 'updated_at',
     },
 ];
 

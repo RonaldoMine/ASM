@@ -28,8 +28,8 @@ function App() {
           <Route path="info/knowledge_base">
             <Route index element={<KnowledgeBaseList />} />
             <Route path="create" element={<KnowledgeBaseAdd />} />
-            <Route path="detail/:id" element={<KnowledgeBaseDetail />} />
-            <Route path="edit/:id" element={<KnowledgeBaseEdit />} />
+            <Route path="detail/:articleId" element={<KnowledgeBaseDetail />} />
+            <Route path="edit/:articleId" element={<KnowledgeBaseEdit />} />
           </Route>
         </Route>
         <Route path="/agent" element={<Agent />}>
