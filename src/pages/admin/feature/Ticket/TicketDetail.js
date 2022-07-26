@@ -61,9 +61,9 @@ function TicketDetail() {
     const [form] = Form.useForm();
     let navigate = useNavigate();
 
-    const [comments, setComments] = useState([]); // List of comment
+    //const [comments, setComments] = useState([]); // List of comment
     const [submittingComment, setSubmitting] = useState(false); // Comment Button to make loader
-    const [submittingForm, setSubmittingForm] = useState(false); // Comment Button to make loader
+    const [submittingForm] = useState(false); // Comment Button to make loader
     const [comment, setComment] = useState(''); // Value Comment
     const [title, setEditableTitle] = useState(""); // Manage Typography editable
     const [activity, setActivity] = useState("Commentaires"); // Manage segmented
