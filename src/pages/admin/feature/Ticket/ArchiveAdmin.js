@@ -1,4 +1,4 @@
-import { PageHeader, Select, Table, Tag } from 'antd';
+import { PageHeader, Table, Tag } from 'antd';
 import { useQuery } from 'react-query'
 import { Link } from "react-router-dom";
 import axios from 'axios'
@@ -19,12 +19,13 @@ function ArchiveAdmin() {
             title: 'Intitulé',
             dataIndex: 'title',
             key: 'title',
-            render: (text, record) => record.status != "Fermé" ? <Link to={`/admin/ticket/${record.id}`}>{text}</Link> : <p>{text}</p>
+            render: (text, record) => record.status !== "Fermé" ? <Link to={`/admin/ticket/${record.id}`}>{text}</Link> : <p>{text}</p>
         },
         {
             title: 'Description',
             dataIndex: 'description',
             key: 'description',
+            render: (text) => <p>{new DOMParser().parseFromString(text, 'text/html').body.textContent}</p>
         },
 
         {

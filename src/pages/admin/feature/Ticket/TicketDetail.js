@@ -49,7 +49,7 @@ function TicketDetail() {
         return axios.get(`http://localhost:4000/comments?ticket_id=${ticketId}`)
     }
 
-    const {data: ticketCommentData} = useQuery(["ticketComment", ticketId], fetchTicketComment)
+    const {data: ticketCommentData, isLoading: loadingComment} = useQuery(["ticketComment", ticketId], fetchTicketComment)
     const {mutate: updateState} = useUpdateStatus();
 
     useEffect(() => {
@@ -61,9 +61,8 @@ function TicketDetail() {
     const [form] = Form.useForm();
     let navigate = useNavigate();
 
-    //const [comments, setComments] = useState([]); // List of comment
     const [submittingComment, setSubmitting] = useState(false); // Comment Button to make loader
-    const [submittingForm] = useState(false); // Comment Button to make loader
+    const [submittingForm, setSubmittingForm] = useState(false); // Comment Button to make loader
     const [comment, setComment] = useState(''); // Value Comment
     const [title, setEditableTitle] = useState(""); // Manage Typography editable
     const [activity, setActivity] = useState("Commentaires"); // Manage segmented
@@ -111,7 +110,7 @@ function TicketDetail() {
         if (!comment) return;
         setSubmitting(true);
         setComment('');
-        let data = {ticket_id: ticketId, content: comment, author: 'John Doe', created_At: Date.now()}
+        let data = {ticket_id: ticketId, content: comment, author: 'John Doe', created_at: Date.now()}
         addComment(data);
         setSubmitting(false);
     };
@@ -119,7 +118,9 @@ function TicketDetail() {
     //Submit Edit Ticket Form
     const submitForm = (fields) => {
         let {description} = fields;
+        setSubmittingForm(true);
         editTitleandDescription({id: ticketId, title: title, description: description.toHTML()})
+        setSubmittingForm(false);
         message.success("Modification prise en compte");
     }
     //Event change content comment value
@@ -165,7 +166,7 @@ function TicketDetail() {
                         <Segmented options={['Commentaires', 'Historique']} onChange={(value) => setActivity(value)}/>
                         {activity === "Commentaires" ?
                             <div className="comments">
-                                {<CommentList comments={ticketCommentData?.data}/>}
+                                {loadingComment ? <CustomLoader/> : <CommentList comments={ticketCommentData?.data}/>}
                                 <Comment
                                     content={
                                         (<>
@@ -264,14 +265,6 @@ function TicketDetail() {
                                         </Col>
                                         <Col span="16">
                                             {ticket?.data.category}
-                                        </Col>
-                                    </Row>
-                                    <Row>
-                                        <Col span="8">
-                                            Impact
-                                        </Col>
-                                        <Col span="16">
-                                            {ticket?.data.impact}
                                         </Col>
                                     </Row>
                                 </Space>
