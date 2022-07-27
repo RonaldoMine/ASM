@@ -1,22 +1,28 @@
-import { PageHeader, Select, Table, Tag } from 'antd';
+import { PageHeader, Select, Table, Tag, Input } from 'antd';
 import { useQuery } from 'react-query'
 //import { data as dt } from '../../../mockdata/TicketData'
 import { Link } from "react-router-dom";
 import axios from 'axios'
 import { useUpdateStatus } from './hooks/useUpdateStatus';
+import { useState, useEffect } from 'react';
 import './TableSharedStyle.css'
+import CustomLoader from '../components/custom/CustomLoader';
 
 const { Option } = Select;
 
 function WaitList() {
 
+    let [filteredData, setFilteredData] = useState([]);
     const fetchWaitlist = () => {
         return axios.get("http://localhost:4000/tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo")
     }
 
     const { mutate: updateState } = useUpdateStatus();
 
-    const { data: waitlist } = useQuery("waitlist", fetchWaitlist)
+    const { data: waitlist, isLoading } = useQuery("waitlist", fetchWaitlist)
+    useEffect(() => {
+        setFilteredData(waitlist?.data);
+    }, [waitlist])
 
     //Columns
     const columns = [
@@ -91,12 +97,23 @@ function WaitList() {
             key: 'created_at',
         }
     ];
+    // Search In table
+
+    const onSearch = (value) => {
+        if (value !== '') {
+            setFilteredData(waitlist?.data.filter((data) =>  data.title.toLowerCase().includes(value.toLowerCase()) || data.description.toLowerCase().includes(value.toLowerCase())))
+        } else {
+            setFilteredData(waitlist?.data);
+        }
+    };
+    if (isLoading) return (<CustomLoader />)
     return (
         <>
             <PageHeader
                 title="Tous les tickets"
             />
-            <Table columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={{ type: 'checkbox' }} rowKey="id" dataSource={waitlist?.data} className="all-tickets_table" scroll={{ x: "true" }} />
+            <Input.Search placeholder="Recherche" onChange={(e) =>onSearch(e.target.value)} style={{ width: 300, marginBottom: 20}}/>
+            <Table columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={{ type: 'checkbox' }} rowKey="id" dataSource={filteredData} className="all-tickets_table" scroll={{ x: "true" }} />
 
         </>
     )
