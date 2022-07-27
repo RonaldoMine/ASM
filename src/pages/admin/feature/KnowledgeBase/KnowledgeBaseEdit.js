@@ -1,17 +1,19 @@
-import {useNavigate, useParams} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import KnowledgeBaseForm from "./KnowledgeBaseForm";
-import {Button, Form, PageHeader} from "antd";
-import {LeftOutlined} from "@ant-design/icons";
+import { Button, Form, message, PageHeader } from "antd";
+import { LeftOutlined } from "@ant-design/icons";
 import { useGetArticle } from "../hooks/useGetArticle";
 import CustomLoader from "../../components/custom/CustomLoader";
+import { useEditArticle } from "../hooks/useEditArticle";
 
 function KnowledgeBaseEdit() {
     // Hooks
     const [form] = Form.useForm();
-    const {articleId} = useParams()
+    const { articleId } = useParams()
     let navigate = useNavigate();
 
     const { data: article, isLoading } = useGetArticle(articleId);
+    const { mutate: editArticle } = useEditArticle();
 
     //Functions
     const back = () => {
@@ -19,10 +21,9 @@ function KnowledgeBaseEdit() {
     }
 
     const submitForm = (fields) => {
-        let {title, description, category} = fields;
-        console.log(title);
-        console.log(category);
-        console.log(description.toHTML());
+        let { description, title, category } = fields;
+        editArticle({ id: articleId, title: title, category: category, content: description.toHTML() })
+        message.success("Modifié avec succès")
     }
 
     // Datas
@@ -35,10 +36,10 @@ function KnowledgeBaseEdit() {
     //     updated_At: new Date().toDateString()
     // }
 
-    if(isLoading) return(<CustomLoader/>)
+    if (isLoading) return (<CustomLoader />)
     return (
         <>
-            <PageHeader extra={[<Button key="back" type="link" onClick={() => back()} icon={<LeftOutlined/>}> Retour</Button>]}/>
+            <PageHeader extra={[<Button key="back" type="link" onClick={back} icon={<LeftOutlined />}> Retour</Button>]} />
             <Form
                 name="edit_knowledge"
                 layout='vertical'
@@ -47,7 +48,7 @@ function KnowledgeBaseEdit() {
                 onFinish={submitForm}
             >
                 <KnowledgeBaseForm form={form} articleValue={article.data.title} categoryValue={article.data.category}
-                                   descriptionValue={article.data.content} editorHeight={300} textButton="Modifier"/>
+                    descriptionValue={article.data.content} editorHeight={300} textButton="Modifier" />
             </Form>
         </>
     );

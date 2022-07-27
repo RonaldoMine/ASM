@@ -1,17 +1,17 @@
-div.userCreate{
+div.header_avatar{
     display: flex;
     justify-items: center;
     padding: 0 0 20px 0;
 }
-div.userCreate p{
+div.header_avatar p{
     margin-bottom: 0;
     font-size: 12px;
     margin-left: 5px;
     line-height: 16px;
 }
-div.contentDescription{
+div.main-content_description{
     padding-top: 40px;
 }
-div.contentDescription > ol,div.contentDescription > ul{
+div.main-content_description > ol,div.main-content_description > ul{
     margin-left: 15px;
 }

@@ -2,7 +2,7 @@ import { PageHeader, Table, Tag } from 'antd';
 import { useQuery } from 'react-query'
 import { Link } from "react-router-dom";
 import axios from 'axios'
-
+import '../TableSharedStyle.css'
 
 function ArchiveAdmin() {
 
@@ -25,6 +25,7 @@ function ArchiveAdmin() {
             title: 'Description',
             dataIndex: 'description',
             key: 'description',
+            className: 'table_cell--width',
             render: (text) => <p>{new DOMParser().parseFromString(text, 'text/html').body.textContent}</p>
         },
 
@@ -81,7 +82,7 @@ function ArchiveAdmin() {
             <PageHeader
                 title="Tous les tickets"
             />
-            <Table columns={columns} rowKey="id" dataSource={archived?.data} className="all-tickets_table" scroll={{ x: "true" }} />
+            <Table columns={columns} rowKey="id" rowClassName="waitlist-table_row--shadow" dataSource={archived?.data} className="all-tickets_table" scroll={{ x: "true" }} />
 
         </>
     )

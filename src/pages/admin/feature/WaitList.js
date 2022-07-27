@@ -4,7 +4,7 @@ import { useQuery } from 'react-query'
 import { Link } from "react-router-dom";
 import axios from 'axios'
 import { useUpdateStatus } from './hooks/useUpdateStatus';
-
+import './TableSharedStyle.css'
 
 const { Option } = Select;
 
@@ -96,7 +96,7 @@ function WaitList() {
             <PageHeader
                 title="Tous les tickets"
             />
-            <Table columns={columns} rowSelection={{ type: 'checkbox' }} rowKey="id" dataSource={waitlist?.data} className="all-tickets_table" scroll={{ x: "true" }} />
+            <Table columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={{ type: 'checkbox' }} rowKey="id" dataSource={waitlist?.data} className="all-tickets_table" scroll={{ x: "true" }} />
 
         </>
     )
