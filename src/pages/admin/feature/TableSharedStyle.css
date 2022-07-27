@@ -1,0 +1,10 @@
+.waitlist-table_row--shadow:hover{
+    box-shadow: 0px 2px 8px -2px #ccc;
+}
+
+.table_cell--width p{
+    white-space: nowrap;
+    max-width: 150px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}

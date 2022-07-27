@@ -59,12 +59,9 @@ function KnowledgeBaseList() {
                         title="Base de connaissances"
                         extra={[<Link to="create" key="add"><Button type="primary">Créer un article</Button></Link>]}
             />
-            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Debitis distinctio exercitationem mollitia quos
-                vitae! Ad dolorem dolores earum eius error, fugiat inventore labore, maiores modi officiis pariatur
-                quisquam velit voluptatibus?
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. </p>
+            <p>Une base de connaissances est une bibliothèque en ligne accessible en libre-service, qui regroupe des informations sur un produit, un service, un département ou un thème. </p>
             <Search placeholder="Recherche" onSearch={onSearch} style={{width: 300, marginBottom: 20}}/>
-            <Table columns={columns} rowSelection={{type: 'checkbox'}} rowKey="id" dataSource={filtered}
+            <Table columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={{type: 'checkbox'}} rowKey="id" dataSource={filtered}
                    className="all-knowledgebase_table" scroll={{x: "true"}}/>
 
             {/*Modal */}
