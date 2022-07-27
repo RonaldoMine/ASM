@@ -1,10 +1,11 @@
 import { Button, Form, Input, Select, Space } from "antd";
 import BraftEditor from "braft-editor";
+import { useNavigate } from "react-router-dom";
 import { useEditArticle } from "../hooks/useEditArticle";
 
 function KnowledgeBaseForm({ form, articleValue = "", categoryValue = "", descriptionValue = "", textButton = "Sauvegarder" }) {
     //Hooks
-    const { mutate: editArticle } = useEditArticle();
+    let navigate = useNavigate();
 
     //On Change Braft Editor
     const onChangeBraft = (value) => {
@@ -15,13 +16,9 @@ function KnowledgeBaseForm({ form, articleValue = "", categoryValue = "", descri
         }
     };
     const handleCancel = () => {
-        form.resetFields()
+        form.resetFields();
+        navigate(-1);
     };
-
-    const submitForm = (fields) => {
-        let { description, title, category } = fields;
-        editArticle({title: title, category: category, description: description.toHTML() })
-    }
 
 
     return (
@@ -31,7 +28,6 @@ function KnowledgeBaseForm({ form, articleValue = "", categoryValue = "", descri
                 name="title"
                 rules={[{ required: true, message: "Insérez un titre" }]}
                 initialValue={articleValue}
-                onFinish={submitForm}
             >
                 <Input />
             </Form.Item>

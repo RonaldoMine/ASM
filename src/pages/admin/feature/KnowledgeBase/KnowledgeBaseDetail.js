@@ -1,6 +1,6 @@
-import {Link, useParams} from "react-router-dom";
-import {Avatar, Button, PageHeader, Tag, Tooltip} from "antd";
-import {DeleteOutlined, EditOutlined} from "@ant-design/icons";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Avatar, Button, PageHeader, Tag, Tooltip } from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import "./KnowledgeBase.css";
 import CustomLoader from "../../components/custom/CustomLoader";
 import { useGetArticle } from "../hooks/useGetArticle";
@@ -8,6 +8,12 @@ import { useGetArticle } from "../hooks/useGetArticle";
 function KnowledgeBaseDetail() {
 
     const { articleId } = useParams();
+
+    let navigate = useNavigate();
+
+    const back = () => {
+        navigate(-1)
+    }
 
     const { data: article, isLoading } = useGetArticle(articleId);
 
@@ -20,21 +26,27 @@ function KnowledgeBaseDetail() {
     //     updated_At: new Date().toDateString()
     // }
     if (isLoading) return (<CustomLoader />)
-    
+
     return (
         <>
             <PageHeader
                 title={article.data.title}
+                onBack={() => navigate(-1)}
                 extra={[
-                    <Tooltip key="edit" title="Modifier"><Link to={`/admin/info/knowledge_base/edit/${articleId}`}><EditOutlined/></Link> </Tooltip>,
+                    <Tooltip key="edit" title="Modifier"><Link to={`/admin/info/knowledge_base/edit/${articleId}`}><EditOutlined /></Link> </Tooltip>,
                     <Tooltip key="delete" title="Fermer"><Button danger type="link" onClick={() => {
-                    }} icon={<DeleteOutlined/>}></Button> </Tooltip>]}
+                    }} icon={<DeleteOutlined />}></Button> </Tooltip>]}
             />
-            <div className="userCreate"><Avatar>R</Avatar>
-                <p><p>Crée par ronaldo9092</p><p><small>{article.data.created_at}</small></p></p>
+            <div className="header_avatar"><Avatar>R</Avatar>
+                <div>
+                    <p><span>Crée par ronaldo9092</span></p>
+                    <p><small>{article.data.created_at}</small></p>
+                </div>
             </div>
             <Tag>{article.data.category}</Tag>
-            <div className="contentDescription" dangerouslySetInnerHTML={{__html: article.data.content}}></div>
+            <div className="main-content_description" dangerouslySetInnerHTML={{ __html: article.data.content }}></div>
+            <br />
+            <Button size="large" type="primary" htmlType="reset" onClick={back}>Retour</Button>
         </>
     );
 }
