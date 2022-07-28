@@ -22,9 +22,11 @@ function App() {
           <Route path='/login' element={<Login />} />
         </Route>
         <Route path="/admin" element={<Admin />}>
-          <Route index element={<WaitList />} />
-          <Route path="/admin/archives" element={<ArchiveAdmin />} />
-          <Route path="ticket/:ticketId" element={<TicketDetail />} />
+          <Route path="general">
+            <Route path="tickets" element={<WaitList />} />
+            <Route path="archives" element={<ArchiveAdmin />} />
+            <Route path="ticket/:ticketId" element={<TicketDetail />} />
+          </Route>
           <Route path="info/knowledge_base">
             <Route index element={<KnowledgeBaseList />} />
             <Route path="create" element={<KnowledgeBaseAdd />} />

@@ -4,17 +4,17 @@ import { HomeOutlined, ExclamationCircleOutlined, BarsOutlined, InfoOutlined, Da
 export const SideBarData = [
     {
         title: 'Général',
-        path: '/general',
+        path: 'general',
         icon: <HomeOutlined />,
         subnav: [
             {
                 title: 'Tickets',
-                path: '/admin',
+                path: '/admin/general/tickets',
                 icon: <ExclamationCircleOutlined />,
             },
             {
                 title: 'Archives',
-                path: '/admin/archives',
+                path: '/admin/general/archives',
                 icon: <FolderOutlined />
             }
 
@@ -22,7 +22,7 @@ export const SideBarData = [
     },
     {
         title: 'Informations',
-        path: '/admin/info',
+        path: 'info',
         icon: <InfoOutlined />,
         subnav: [
             {
@@ -32,7 +32,7 @@ export const SideBarData = [
             },
             {
                 title: 'Suggestions',
-                path: '/admin/info/knowledge_base/suggestions',
+                path: '/admin/info/suggestions',
                 icon: <ContainerOutlined />
             },
             {
@@ -45,7 +45,7 @@ export const SideBarData = [
     },
     {
         title: 'Tableau de bord',
-        path: '/admin/dashboard',
+        path: 'dashboard',
         icon: <DashboardOutlined />,
         subnav: [
             {
@@ -58,7 +58,7 @@ export const SideBarData = [
     },
     {
         title: 'Paramètres',
-        path: '/admin/settings',
+        path: 'settings',
         icon: <SettingOutlined />,
         subnav: [
             {
@@ -73,7 +73,7 @@ export const SideBarData = [
             },
             {
                 title: 'Catégories',
-                path: '/admin/categories',
+                path: '/admin/settings/categories',
                 icon: <BarsOutlined />
             }
         ]
