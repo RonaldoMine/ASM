@@ -1,22 +1,46 @@
-import { PageHeader, Select, Table, Tag } from 'antd';
+import { Button, PageHeader, Select, Space, Table, Tag } from 'antd';
 import { useQuery } from 'react-query'
 //import { data as dt } from '../../../mockdata/TicketData'
 import { Link } from "react-router-dom";
 import axios from 'axios'
 import { useUpdateStatus } from './hooks/useUpdateStatus';
+import { CheckOutlined, LockOutlined } from "@ant-design/icons";
 import './TableSharedStyle.css'
+import { useState } from 'react';
+import { useResolveSelectedTickets } from './hooks/useResolveSelectedTickets';
 
 const { Option } = Select;
 
 function WaitList() {
 
-    const fetchWaitlist = () => {
+    //hooks
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const { mutate: markedAsResolvedOrClosed } = useResolveSelectedTickets();
+    const { mutate: updateState } = useUpdateStatus();
+const fetchWaitlist = () => {
         return axios.get("http://localhost:4000/tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo")
     }
-
-    const { mutate: updateState } = useUpdateStatus();
-
     const { data: waitlist } = useQuery("waitlist", fetchWaitlist)
+    //functions
+    const onSelectChange = (newSelectedRowKeys) => {
+        setSelectedRowKeys(newSelectedRowKeys);
+    };
+    const rowSelection = {
+        type: "checkbox",
+        selectedRowKeys,
+        onChange: onSelectChange,
+    };
+
+    const hasSelected = selectedRowKeys.length > 0;
+
+    
+
+
+    const markSelectedAsSolvedOrClosed = (action) => {
+        selectedRowKeys.forEach((ticketId) => {
+            markedAsResolvedOrClosed({ticketId: ticketId, status: action})
+        })
+    } 
 
     //Columns
     const columns = [
@@ -51,8 +75,9 @@ function WaitList() {
             render: (status, record) => {
                 return (
                     <Select defaultValue={status} style={{ width: "98px" }}
-                     onChange={(status) => { updateState({ id: record.id, status: status })
-                    }}>
+                        onChange={(status) => {
+                            updateState({ id: record.id, status: status })
+                        }}>
                         <Option value="Nouveau">Nouveau</Option>
                         <Option value="Assigné">Assigné</Option>
                         <Option value="En cours">En cours</Option>
@@ -96,7 +121,11 @@ function WaitList() {
             <PageHeader
                 title="Tous les tickets"
             />
-            <Table columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={{ type: 'checkbox' }} rowKey="id" dataSource={waitlist?.data} className="all-tickets_table" scroll={{ x: "true" }} />
+            {hasSelected ? <Space style={{ marginBottom: 12, display: 'flex', justifyContent: 'end' }}>
+                <Button onClick={() => markSelectedAsSolvedOrClosed("Résolu")} icon={<CheckOutlined />}>Marquer comme résolu</Button>
+                <Button onClick={() => markSelectedAsSolvedOrClosed("Fermé")} icon={<LockOutlined />}>Fermer les tickets</Button>
+            </Space> : ''}
+            <Table columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id" dataSource={waitlist?.data} className="all-tickets_table" scroll={{ x: "true" }} />
 
         </>
     )

@@ -12,6 +12,7 @@ import KnowledgeBaseEdit from "./pages/admin/feature/KnowledgeBase/KnowledgeBase
 import KnowledgeBaseAdd from "./pages/admin/feature/KnowledgeBase/KnowledgeBaseAdd";
 import TicketDetail from "./pages/admin/feature/Ticket/TicketDetail";
 import ArchiveAdmin from './pages/admin/feature/Ticket/ArchiveAdmin';
+import Suggestion from './pages/admin/feature/suggestion/Suggestion';
 const qc = new QueryClient();
 
 function App() {
@@ -25,12 +26,15 @@ function App() {
           <Route index element={<WaitList />} />
           <Route path="/admin/archives" element={<ArchiveAdmin />} />
           <Route path="ticket/:ticketId" element={<TicketDetail />} />
-          <Route path="info/knowledge_base">
-            <Route index element={<KnowledgeBaseList />} />
-            <Route path="create" element={<KnowledgeBaseAdd />} />
-            <Route path="detail/:articleId" element={<KnowledgeBaseDetail />} />
-            <Route path="edit/:articleId" element={<KnowledgeBaseEdit />} />
+          <Route path="info">
+            <Route path='knowledge_base' element={<KnowledgeBaseList />} >
+              <Route path="create" element={<KnowledgeBaseAdd />} />
+              <Route path="detail/:articleId" element={<KnowledgeBaseDetail />} />
+              <Route path="edit/:articleId" element={<KnowledgeBaseEdit />} />
+            </Route>
+            <Route path="suggestions" element={<Suggestion />} />
           </Route>
+
         </Route>
         <Route path="/agent" element={<Agent />}>
           <Route index element={<AgentTickets />} />
