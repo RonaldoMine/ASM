@@ -32,7 +32,7 @@ export const SideBarData = [
             },
             {
                 title: 'Suggestions',
-                path: '/admin/info/knowledge_base/suggestions',
+                path: '/admin/info/suggestions',
                 icon: <ContainerOutlined />
             },
             {

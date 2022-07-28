@@ -33,6 +33,8 @@ const items2 = SideBarData.map(
 const SideBar = () => {
 
     const navigate = useNavigate();
+    //const location = useLocation();
+    //console.log(location.pathname);
 
     return (
         <Sider width={200} className="site-layout-background" >

@@ -27,8 +27,9 @@ function App() {
           <Route path="/admin/archives" element={<ArchiveAdmin />} />
           <Route path="ticket/:ticketId" element={<TicketDetail />} />
           <Route path="info">
-            <Route path='knowledge_base' element={<KnowledgeBaseList />} >
-              <Route path="create" element={<KnowledgeBaseAdd />} />
+            <Route path='knowledge_base' >
+              <Route index element={<KnowledgeBaseList />} />
+              <Route path="create" element={<KnowledgeBaseAdd /> } />
               <Route path="detail/:articleId" element={<KnowledgeBaseDetail />} />
               <Route path="edit/:articleId" element={<KnowledgeBaseEdit />} />
             </Route>

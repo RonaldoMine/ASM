@@ -1,10 +1,10 @@
-import {Button, PageHeader, Table} from 'antd';
+import {Button, PageHeader, Table, Input} from 'antd';
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import 'braft-editor/dist/index.css'
-import Search from "antd/es/input/Search";
 import axios from "axios";
 import {useQuery} from "react-query";
+import CustomLoader from '../../components/custom/CustomLoader';
 
 export const columns = [
     {
@@ -32,27 +32,27 @@ export const columns = [
 
 function KnowledgeBaseList() {
     // Hooks
-    let [filtered, setFiltered] = useState([]);
+    let [filteredData, setFilteredData] = useState([]);
     const fetchArticle = () => {
         return axios.get("http://localhost:4000/kb_article?knowledgeBase_id=2")
 
     }
-    const {data: articles} = useQuery(["articles", "2"], fetchArticle)
+    const {data: articles, isLoading} = useQuery(["articles", "2"], fetchArticle)
 
     useEffect(() => {
-        setFiltered(articles?.data);
+        setFilteredData(articles?.data);
     }, [articles])
     // # Funtions
     // Search In table
 
     const onSearch = (value) => {
         if (value !== '') {
-            setFiltered(articles?.data.filter((data) => value === "" || data.content.toLowerCase().includes(value.toLowerCase())))
+            setFilteredData(articles?.data.filter((data) => data.title.toLowerCase().includes(value.toLowerCase()) || data.description.toLowerCase().includes(value.toLowerCase())))
         } else {
-            setFiltered(articles?.data);
+            setFilteredData(articles?.data);
         }
     };
-
+    if (isLoading) return (<CustomLoader />)
     return (
         <>
             <PageHeader style={{marginBottom: 20}}
@@ -60,8 +60,8 @@ function KnowledgeBaseList() {
                         extra={[<Link to="create" key="add"><Button type="primary">Créer un article</Button></Link>]}
             />
             <p>Une base de connaissances est une bibliothèque en ligne accessible en libre-service, qui regroupe des informations sur un produit, un service, un département ou un thème. </p>
-            <Search placeholder="Recherche" onSearch={onSearch} style={{width: 300, marginBottom: 20}}/>
-            <Table columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={{type: 'checkbox'}} rowKey="id" dataSource={filtered}
+            <Input.Search placeholder="Recherche" onChange={(e) =>onSearch(e.target.value)} style={{ width: 300, marginBottom: 20}}/>
+            <Table columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={{type: 'checkbox'}} rowKey="id" dataSource={filteredData}
                    className="all-knowledgebase_table" scroll={{x: "true"}}/>
 
             {/*Modal */}
