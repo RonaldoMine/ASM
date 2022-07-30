@@ -1,10 +1,9 @@
 import './App.css';
 import {Route, Routes} from 'react-router-dom';
-import {QueryClientProvider, QueryClient} from 'react-query';
+import {QueryClient, QueryClientProvider} from 'react-query';
 import Login from './auth/login/Login';
 import Admin from './pages/admin';
 import Agent from './pages/agent';
-import WaitList from './pages/admin/feature/WaitList';
 import AgentTickets from './pages/agent/feature/AgentTickets';
 import KnowledgeBaseList from "./pages/admin/feature/KnowledgeBase/KnowledgeBaseList";
 import KnowledgeBaseDetail from "./pages/admin/feature/KnowledgeBase/KnowledgeBaseDetail";
@@ -13,6 +12,7 @@ import KnowledgeBaseAdd from "./pages/admin/feature/KnowledgeBase/KnowledgeBaseA
 import TicketDetail from "./pages/admin/feature/Ticket/TicketDetail";
 import ArchiveAdmin from './pages/admin/feature/Ticket/ArchiveAdmin';
 import Suggestion from './pages/admin/feature/suggestion/Suggestion';
+import WaitList from "./pages/admin/feature/WaitList";
 
 const qc = new QueryClient();
 
@@ -25,9 +25,11 @@ function App() {
                 </Route>
                 <Route path="/admin" element={<Admin/>}>
                     <Route path="general">
-                        <Route path="tickets" element={<WaitList/>}/>
+                        <Route path="tickets">
+                            <Route index element={<WaitList/>}/>
+                            <Route path=":ticketId" element={<TicketDetail/>}/>
+                        </Route>
                         <Route path="archives" element={<ArchiveAdmin/>}/>
-                        <Route path="ticket/:ticketId" element={<TicketDetail/>}/>
                     </Route>
                     <Route path="info">
                         <Route path='knowledge_base'>
