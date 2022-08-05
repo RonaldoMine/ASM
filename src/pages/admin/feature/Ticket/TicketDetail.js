@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {
     Avatar,
     Button,
@@ -19,18 +19,19 @@ import {
     Tooltip,
     Typography
 } from "antd";
-import { DeleteOutlined, SmileOutlined } from "@ant-design/icons";
-import { useEffect, useState } from "react";
+import {DeleteOutlined} from "@ant-design/icons";
+import {useEffect, useState} from "react";
 import BraftEditor from "braft-editor";
 import CustomAvatarUser from "../../components/custom/CustomAvatarUser";
-import { useGetTicketData } from "../hooks/useGetTicketData";
-import { useEditStatus } from "../hooks/useEditStatus";
+import {useGetTicketData} from "../hooks/useGetTicketData";
+import {useEditStatus} from "../hooks/useEditStatus";
 import axios from "axios";
-import { useQuery } from "react-query";
-import { useEditTicketTitleAndDescription } from "../hooks/useEditTicketTitleAndDescription";
-import { useUpdateStatus } from "../hooks/useUpdateStatus";
+import {useQuery} from "react-query";
+import {useEditTicketTitleAndDescription} from "../hooks/useEditTicketTitleAndDescription";
+import {useUpdateStatus} from "../hooks/useUpdateStatus";
 import CustomLoader from "../../components/custom/CustomLoader";
-import { useAddComment } from "../hooks/useAddComment";
+import {useAddComment} from "../hooks/useAddComment";
+import {API_URL} from "../../../../global/axios";
 
 const { Panel } = Collapse;
 const { TextArea } = Input;
@@ -54,7 +55,7 @@ function TicketDetail() {
     //fetch ticket comments
     const fetchTicketComment = () => {
 
-        return axios.get(`http://localhost:4000/comments?ticket_id=${ticketId}`)
+        return axios.get(API_URL+`comments?ticket_id=${ticketId}`)
     }
 
     const { data: ticketCommentData, isLoading: loadingComment } = useQuery(["ticketComment", ticketId], fetchTicketComment)
@@ -62,7 +63,7 @@ function TicketDetail() {
     //fetch ticket history
     const fetchTicketHistory = () => {
 
-        return axios.get(`http://localhost:4000/history?item_id=${ticketId}`)
+        return axios.get(API_URL+`history?item_id=${ticketId}`)
     }
 
     const { data: ticketHistoryData, isLoading: loadingHistory, refetch } = useQuery(["ticketHistory", ticketId], fetchTicketHistory, {
@@ -80,7 +81,7 @@ function TicketDetail() {
 
     //side effect, load history
     useEffect(() => {
-        if (activity == "Historique") refetch();
+        if (activity === "Historique") refetch();
     }, [activity])
 
 

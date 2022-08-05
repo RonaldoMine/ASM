@@ -1,15 +1,13 @@
 import React from "react";
-import { BellFilled, UserOutlined } from '@ant-design/icons';
-import { Avatar } from "antd";
-import CustomDropdown from "./DropdownAccount/CustomDropdown";
-import { Typography } from 'antd';
+import {Avatar, Typography} from "antd";
 
-const { Title } = Typography;
+
+const {Title} = Typography;
 
 // Menu of Notifications
 export const bellMenu = [
     {
-        label: <Title level={4} >Ticket en cours</Title>,
+        label: <Title level={4}>Ticket en cours</Title>,
         key: '0',
     },
     {
@@ -22,14 +20,16 @@ export const bellMenu = [
 ];
 // Profile Menu
 
-export const profileMenu = (auth) => [
+export const profileMenu = (auth, signOut, navigate) => [
     {
         label: <Title level={5}>Compte</Title>,
         key: '0',
         type: 'group',
     },
     {
-        label: (<div><Avatar>{auth.username[0]}</Avatar> <p>{auth.username} <br /><small>{auth.email}</small></p></div>),
+        label: (
+            <div><Avatar>{auth.username[0].toUpperCase()}</Avatar> <p>{auth.username} <br/><small>{auth.email}</small>
+            </p></div>),
         key: '1',
     },
     {
@@ -40,11 +40,14 @@ export const profileMenu = (auth) => [
         type: 'divider',
     },
     {
-        label: <Title level={4}>Déconnexion</Title>,
+        label: <Title level={4} onClick={() => {
+            signOut();
+            navigate("/login", {replace: true});
+        }}>Déconnexion</Title>,
         key: '5'
     },
 ];
-
+/*
 export const NavBarData = [
     {
         key: "notifications",
@@ -56,5 +59,5 @@ export const NavBarData = [
 
     },
 
-]
+]*/
 

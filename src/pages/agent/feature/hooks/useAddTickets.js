@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from 'react-query'
 import axios from 'axios'
+import {API_URL} from "../../../../global/axios";
 
  const addTickets = (ticket) => {
-        return axios.post("http://localhost:4000/tickets", ticket)
+        return axios.post(API_URL+"tickets", ticket)
     }
 
 export const useAddTickets = () => {

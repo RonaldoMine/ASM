@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from 'react-query'
 import axios from 'axios'
+import {API_URL} from "../../../../global/axios";
 
 const fetchArticleData = ({ queryKey }) => {
     const articleId = queryKey[1];
-    return axios.get(`http://localhost:4000/kb_article/${articleId}`)
+    return axios.get(API_URL+`kb_article/${articleId}`)
 }
 
 export const useGetArticle= (articleId) => {

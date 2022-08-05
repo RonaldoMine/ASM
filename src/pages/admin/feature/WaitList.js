@@ -8,6 +8,7 @@ import './TableSharedStyle.css'
 import {useResolveSelectedTickets} from './hooks/useResolveSelectedTickets';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import CustomLoader from '../components/custom/CustomLoader';
+import {API_URL} from "../../../global/axios";
 
 const {Option} = Select;
 const EditableContext = React.createContext(null);
@@ -105,12 +106,12 @@ function WaitList() {
     let [filteredData, setFilteredData] = useState([]);
     let [filteredUserData, setFilteredUserData] = useState([]);
     const fetchWaitlist = () => {
-        return axios.get("http://localhost:4000/tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo")
+        return axios.get(API_URL+"tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo")
     }
     const {data: waitlist, isLoading} = useQuery("waitlist", fetchWaitlist)
     //List user
     const fetchUser = () => {
-        return axios.get("http://localhost:4000/users")
+        return axios.get(API_URL+"users")
     }
     const {data: users} = useQuery("userlist", fetchUser)
 

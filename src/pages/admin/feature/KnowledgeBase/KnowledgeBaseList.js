@@ -5,6 +5,7 @@ import 'braft-editor/dist/index.css'
 import axios from "axios";
 import {useQuery} from "react-query";
 import CustomLoader from '../../components/custom/CustomLoader';
+import {API_URL} from "../../../../global/axios";
 
 export const columns = [
     {
@@ -34,7 +35,7 @@ function KnowledgeBaseList() {
     // Hooks
     let [filteredData, setFilteredData] = useState([]);
     const fetchArticle = () => {
-        return axios.get("http://localhost:4000/kb_article?knowledgeBase_id=2")
+        return axios.get(API_URL+"kb_article?knowledgeBase_id=2")
 
     }
     const {data: articles, isLoading} = useQuery(["articles", "2"], fetchArticle)

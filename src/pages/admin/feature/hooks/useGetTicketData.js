@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from 'react-query'
 import axios from 'axios'
+import {API_URL} from "../../../../global/axios";
 
 const fetchTicketData = ({ queryKey }) => {
     const ticketId = queryKey[1];
-    return axios.get(`http://localhost:4000/tickets/${ticketId}`)
+    return axios.get(API_URL+`tickets/${ticketId}`)
 }
 
 export const useGetTicketData = (ticketId) => {

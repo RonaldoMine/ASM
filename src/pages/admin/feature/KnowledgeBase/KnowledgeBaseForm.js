@@ -1,7 +1,6 @@
-import { Button, Form, Input, Select, Space } from "antd";
+import {Button, Form, Input, Select, Space} from "antd";
 import BraftEditor from "braft-editor";
-import { useNavigate } from "react-router-dom";
-import { useEditArticle } from "../hooks/useEditArticle";
+import {useNavigate} from "react-router-dom";
 
 function KnowledgeBaseForm({ form, articleValue = "", categoryValue = "", descriptionValue = "", textButton = "Sauvegarder" }) {
     //Hooks

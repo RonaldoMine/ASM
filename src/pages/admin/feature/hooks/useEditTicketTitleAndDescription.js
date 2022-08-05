@@ -1,8 +1,9 @@
 import { useMutation } from 'react-query'
 import axios from 'axios'
+import {API_URL} from "../../../../global/axios";
 
 const editTitleandDescription = (elt) => {
-    return axios.patch(`http://localhost:4000/tickets/${elt.id}`, { title: elt.title, description: elt.description })
+    return axios.patch(API_URL+`tickets/${elt.id}`, { title: elt.title, description: elt.description })
 }
 
 export const useEditTicketTitleAndDescription = () => {

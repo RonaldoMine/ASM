@@ -3,12 +3,13 @@ import { useQuery } from 'react-query'
 import { Link } from "react-router-dom";
 import axios from 'axios'
 import '../TableSharedStyle.css'
+import {API_URL} from "../../../../global/axios";
 
 function ArchiveAdmin() {
 
     const fetchArchive = () => {
 
-        return axios.get("http://localhost:4000/tickets?status=Résolu&status=Fermé&agency=Bonanjo")
+        return axios.get(API_URL+"tickets?status=Résolu&status=Fermé&agency=Bonanjo")
     }
 
     const { data: archived } = useQuery("archived", fetchArchive)

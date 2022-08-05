@@ -4,6 +4,7 @@ import { useQuery } from 'react-query'
 import { Link } from "react-router-dom";
 import axios from 'axios'
 import { useUpdateStatus } from './hooks/useUpdateStatus';
+import {API_URL} from "../../../global/axios";
 
 
 const { Option } = Select;
@@ -12,7 +13,7 @@ function AgentTickets() {
 
     const fetchAgentTickets = () => {
 
-        return axios.get("http://localhost:4000/tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo&author_id=3")
+        return axios.get(API_URL+"tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo&author_id=3")
     }
 
     const { mutate: updateState } = useUpdateStatus();

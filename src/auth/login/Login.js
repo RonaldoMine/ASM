@@ -4,11 +4,12 @@ import logo from '../../assets/logoAFB.png';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAuth from '../hook/useAuth';
 import axios from 'axios'
+import {API_URL} from "../../global/axios";
 
 
 function Login() {
 
-    const { setAuth } = useAuth();
+    const { signIn } = useAuth();
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -24,7 +25,7 @@ function Login() {
         const pass = form.getFieldValue('password');
 
         try {
-            const response = await axios.post("http://localhost:8080/api/auth/signin", { username: name, password: pass },
+            const response = await axios.post(API_URL+"auth/signin", { username: name, password: pass },
                 {
                     headers: { 'Content-Type': 'application/json' }
                 }
@@ -32,8 +33,8 @@ function Login() {
             //console.log(JSON.stringify(response?.data));
             //console.log(JSON.stringify(response));
             const { username, email, agency, role, department } = response?.data
-            setAuth({ username, email, agency, role, department });
-            navigate(`${from+role.substring(5).toLowerCase()}`, { replace: true });
+            signIn({ username, email, agency, role, department });
+            navigate(`${from+role.substring(5).toLowerCase()}/general/tickets`, { replace: true });
         } catch (err) {
             if (!err?.response) {
                 message.error("Aucune réponse du serveur")

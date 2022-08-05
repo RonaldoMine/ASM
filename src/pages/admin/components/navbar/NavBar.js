@@ -8,6 +8,7 @@ import { BellFilled, ExclamationCircleOutlined, UserOutlined } from '@ant-design
 import { useAddTickets } from '../../feature/hooks/useAddTickets';
 import CustomDropdown from './DropdownAccount/CustomDropdown';
 import useAuth from '../../../../auth/hook/useAuth';
+import {useNavigate} from "react-router-dom";
 
 //instanciations
 const { Header } = Layout;
@@ -22,8 +23,8 @@ const NavBar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
     const { mutate: addTicket } = useAddTickets();
-    const {auth} = useAuth();
-    console.log(auth)
+    const {auth, signOut} = useAuth();
+    const navigate = useNavigate();
 
     //Functions
     const handleCancel = () => {
@@ -197,7 +198,7 @@ const NavBar = () => {
 
             <Space size={"large"}>
                 <CustomDropdown menuDatas={bellMenu} icon={<BellFilled style={{ fontSize: "22px" }} />} />
-                <CustomDropdown menuDatas={[]/*profileMenu(auth)*/} icon={<Avatar style={{ marginBottom: '8px' }} icon={<UserOutlined />} />} />
+                <CustomDropdown menuDatas={profileMenu(auth, signOut, navigate)} icon={<Avatar style={{ marginBottom: '8px' }} icon={<UserOutlined />} />} />
             </Space>
         </Header>
     )

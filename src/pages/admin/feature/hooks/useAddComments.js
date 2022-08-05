@@ -1,8 +1,9 @@
-import { useMutation, useQueryClient } from 'react-query'
+import {useMutation} from 'react-query'
 import axios from 'axios'
+import {API_URL} from "../../../../global/axios";
 
- const addComments = (comment) => {
-        return axios.post("http://localhost:4000/comments", comment)
+const addComments = (comment) => {
+        return axios.post(API_URL+"comments", comment)
     }
 
 export const useAddComments = () => {

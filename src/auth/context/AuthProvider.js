@@ -1,12 +1,21 @@
-import { createContext, useState } from "react";
+import {createContext, useState} from "react";
 
 const AuthContext = createContext({});
 
-export const AuthProvider = ({ children }) => {
-    const [auth, setAuth] = useState({ email: "rnado@gm.com" });
+export const AuthProvider = ({children}) => {
+    const [auth, setAuth] = useState(JSON.parse(localStorage.getItem("auth")));
+    let signIn = (newAuth) => {
+        setAuth(newAuth)
+        localStorage.setItem("auth", JSON.stringify(newAuth));
+    };
+
+    let signOut = () => {
+        setAuth({});
+        localStorage.removeItem("auth")
+    };
 
     return (
-        <AuthContext.Provider value={{ auth: auth, setAuth: setAuth }}>
+        <AuthContext.Provider value={{auth, signIn, signOut}}>
             {children}
         </AuthContext.Provider>
     )
