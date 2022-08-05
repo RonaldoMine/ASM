@@ -1,14 +1,50 @@
-import { Button, Form, Input } from 'antd'
+import { Button, Form, Input, message } from 'antd'
 import './Login.css';
 import logo from '../../assets/logoAFB.png';
-import { Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import useAuth from '../hook/useAuth';
+import axios from 'axios'
 
 
 function Login() {
 
+    const { setAuth } = useAuth();
+
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const [form] = Form.useForm()
+
+    const from = location.state?.from?.pathname || `/`;
+
     //Hooks
-    const onFinish = (values) => {
-        console.log(values)
+    const onFinish = async() => {
+
+        const name = form.getFieldValue('username');
+        const pass = form.getFieldValue('password');
+
+        try {
+            const response = await axios.post("http://localhost:8080/api/auth/signin", { username: name, password: pass },
+                {
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+            //console.log(JSON.stringify(response?.data));
+            //console.log(JSON.stringify(response));
+            const { username, email, agency, role, department } = response?.data
+            setAuth({ username, email, agency, role, department });
+            navigate(`${from+role.substring(5).toLowerCase()}`, { replace: true });
+        } catch (err) {
+            if (!err?.response) {
+                message.error("Aucune réponse du serveur")
+            } else if (err.response?.status === 400) {
+                message.info('Mauvaise requête');
+            } else if (err.response?.status === 401) {
+                message.info('Non autorisé');
+            } else {
+                message.error('Erreur de connexion');
+            }
+        }
     }
 
     return (
@@ -21,6 +57,7 @@ function Login() {
                     <Form
                         name="login"
                         layout='vertical'
+                        form={form}
                         onFinish={onFinish}
                         autoComplete="off"
                     >
@@ -44,7 +81,6 @@ function Login() {
                             <Button type="primary" htmlType="submit" className='login-form__submit'>
                                 Submit
                             </Button>
-                            Or <Link to="">register now!</Link>
                         </Form.Item>
                     </Form>
                 </div>

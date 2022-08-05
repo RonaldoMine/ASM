@@ -13,15 +13,17 @@ import KnowledgeBaseAdd from "./pages/admin/feature/KnowledgeBase/KnowledgeBaseA
 import TicketDetail from "./pages/admin/feature/Ticket/TicketDetail";
 import ArchiveAdmin from './pages/admin/feature/Ticket/ArchiveAdmin';
 import Suggestion from './pages/admin/feature/suggestion/Suggestion';
+import Missing from './components/missing/Missing';
 const qc = new QueryClient();
 
 function App() {
+
   return (
     <QueryClientProvider client={qc}>
       <Routes>
-        <Route>
-          <Route path='/login' element={<Login />} />
-        </Route>
+
+        <Route path='/login' element={<Login />} />
+
         <Route path="/admin" element={<Admin />}>
           <Route index element={<WaitList />} />
           <Route path="/admin/archives" element={<ArchiveAdmin />} />
@@ -29,7 +31,7 @@ function App() {
           <Route path="info">
             <Route path='knowledge_base' >
               <Route index element={<KnowledgeBaseList />} />
-              <Route path="create" element={<KnowledgeBaseAdd /> } />
+              <Route path="create" element={<KnowledgeBaseAdd />} />
               <Route path="detail/:articleId" element={<KnowledgeBaseDetail />} />
               <Route path="edit/:articleId" element={<KnowledgeBaseEdit />} />
             </Route>
@@ -40,6 +42,7 @@ function App() {
         <Route path="/agent" element={<Agent />}>
           <Route index element={<AgentTickets />} />
         </Route>
+        <Route path="*" element={<Missing />} />
       </Routes>
     </QueryClientProvider>
   );

@@ -1,12 +1,13 @@
 //imports
-import React, {useState} from 'react'
-import {Avatar, Button, Form, Input, Layout, message, Modal, Select, Space} from 'antd'
+import React, { useState } from 'react'
+import { Avatar, Button, Form, Input, Layout, message, Modal, Select, Space } from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
-import {bellMenu, profileMenu} from './NavBarData';
-import {BellFilled, ExclamationCircleOutlined, UserOutlined} from '@ant-design/icons';
-import {useAddTickets} from '../../feature/hooks/useAddTickets';
+import { bellMenu, profileMenu } from './NavBarData';
+import { BellFilled, ExclamationCircleOutlined, UserOutlined } from '@ant-design/icons';
+import { useAddTickets } from '../../feature/hooks/useAddTickets';
 import CustomDropdown from './DropdownAccount/CustomDropdown';
+import useAuth from '../../../../auth/hook/useAuth';
 
 //instanciations
 const { Header } = Layout;
@@ -14,15 +15,25 @@ const { Option } = Select;
 
 const NavBar = () => {
 
+
+    //Hooks
+    //State for modal component
+    const [form] = Form.useForm();
+    const [isOpen, setIsOpen] = useState(false);
+    const [confirmLoading, setConfirmLoading] = useState(false);
+    const { mutate: addTicket } = useAddTickets();
+    const {auth} = useAuth();
+    console.log(auth)
+
     //Functions
     const handleCancel = () => {
-        if(form.isFieldsTouched(["title", "description"])){
+        if (form.isFieldsTouched(["title", "description"])) {
             Modal.confirm({
                 title: 'Annuler la création de ticket',
-                icon: <ExclamationCircleOutlined/>,
+                icon: <ExclamationCircleOutlined />,
                 content: 'Voulez-vous continuez et perdre ces changements ?',
                 okText: 'Oui',
-                style: {position: 'relative', top: 'calc(100vh - 68%)'},
+                style: { position: 'relative', top: 'calc(100vh - 68%)' },
                 cancelText: 'Non',
                 onOk: () => {
                     form.resetFields()
@@ -31,7 +42,7 @@ const NavBar = () => {
                 onCancel: () => {
                     setIsOpen(true);
                 }
-            }); 
+            });
         } else {
             form.resetFields()
             setIsOpen(false)
@@ -42,23 +53,17 @@ const NavBar = () => {
     const handleCreate = () => {
         setConfirmLoading(true);
         form.validateFields()
-        .then(value => {
-            addTicket({ ...value, resolved: "false", closed_at: "" });
-            form.resetFields()
-            setIsOpen(false);
-            setConfirmLoading(false);
-        }).catch(() => {
-            message.error("Ticket non créé");
-            setConfirmLoading(false);
-        })
+            .then(value => {
+                addTicket({ ...value, resolved: "false", closed_at: "" });
+                form.resetFields()
+                setIsOpen(false);
+                setConfirmLoading(false);
+            }).catch(() => {
+                message.error("Ticket non créé");
+                setConfirmLoading(false);
+            })
     };
 
-    //Hooks
-    //State for modal component
-    const [form] = Form.useForm();
-    const [isOpen, setIsOpen] = useState(false);
-    const [confirmLoading, setConfirmLoading] = useState(false);
-    const { mutate: addTicket } = useAddTickets();
 
     return (
         <Header className="header-container" /*style={{ position: 'fixed', zIndex: 1, width: '100%' }}*/>
@@ -191,8 +196,8 @@ const NavBar = () => {
                 className="header_right" /> */}
 
             <Space size={"large"}>
-                <CustomDropdown menuDatas={bellMenu} icon={<BellFilled style={{ fontSize: "22px" }} />}/>
-                <CustomDropdown menuDatas={profileMenu} icon={<Avatar style={{ marginBottom: '8px' }} icon={<UserOutlined />} />}/>
+                <CustomDropdown menuDatas={bellMenu} icon={<BellFilled style={{ fontSize: "22px" }} />} />
+                <CustomDropdown menuDatas={[]/*profileMenu(auth)*/} icon={<Avatar style={{ marginBottom: '8px' }} icon={<UserOutlined />} />} />
             </Space>
         </Header>
     )
