@@ -4,7 +4,7 @@ import logo from '../../assets/logoAFB.png';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAuth from '../hook/useAuth';
 import axios from 'axios'
-import {API_URL} from "../../global/axios";
+import {API_USER_URL} from "../../global/axios";
 
 
 function Login() {
@@ -25,7 +25,7 @@ function Login() {
         const pass = form.getFieldValue('password');
 
         try {
-            const response = await axios.post(API_URL+"auth/signin", { username: name, password: pass },
+            const response = await axios.post(API_USER_URL+"auth/signin", { username: name, password: pass },
                 {
                     headers: { 'Content-Type': 'application/json' }
                 }

@@ -1,9 +1,10 @@
 import React from 'react'
 import './index.css'
-import { Breadcrumb, Layout } from 'antd';
+import {Layout} from 'antd';
 import NavBar from './components/navbar/NavBar';
 import SideBar from './components/sidebar/SideBar';
-import { Outlet } from 'react-router-dom';
+import {Outlet} from 'react-router-dom';
+
 const { Content } = Layout;
 
 

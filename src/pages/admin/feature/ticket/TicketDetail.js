@@ -97,11 +97,11 @@ function TicketDetail() {
             form.setFieldsValue({ 'description': "" })
         }
     };
-    //Close Ticket
+    //Close ticket
     const closeTicket = () => {
         updateState({ id: ticketId, status: "Fermé" })
         navigate(-1);
-        message.success("Ticket fermé");
+        message.success("ticket fermé");
     }
 
     //Display comments
@@ -124,7 +124,7 @@ function TicketDetail() {
         setSubmitting(false);
     };
 
-    //Submit Edit Ticket Form
+    //Submit Edit ticket Form
     const submitForm = (fields) => {
         let { description } = fields;
         setSubmittingForm(true);

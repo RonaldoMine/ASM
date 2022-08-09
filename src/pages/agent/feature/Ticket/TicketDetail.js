@@ -101,7 +101,7 @@ function TicketDetail() {
         }, 1000);
     };
 
-    //Submit Edit Ticket Form
+    //Submit Edit ticket Form
     const submitForm = (fields) => {
         let {description} = fields;
         console.log(description.toHTML());

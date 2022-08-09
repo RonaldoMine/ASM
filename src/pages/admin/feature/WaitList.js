@@ -1,4 +1,4 @@
-import {Button, Input, PageHeader, Select, Space, Table, Tag, AutoComplete, Form} from 'antd';
+import {AutoComplete, Button, Form, Input, PageHeader, Select, Space, Table, Tag, Typography} from 'antd';
 import {useQuery} from 'react-query'
 import {Link} from "react-router-dom";
 import axios from 'axios'
@@ -8,7 +8,9 @@ import './TableSharedStyle.css'
 import {useResolveSelectedTickets} from './hooks/useResolveSelectedTickets';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import CustomLoader from '../components/custom/CustomLoader';
-import {API_URL} from "../../../global/axios";
+import useAuth from "../../../auth/hook/useAuth";
+import {API_URL, API_USER_URL} from "../../../global/axios";
+import moment from "moment/moment";
 
 const {Option} = Select;
 const EditableContext = React.createContext(null);
@@ -24,17 +26,7 @@ const EditableRow = ({index, ...props}) => {
     );
 };
 
-const EditableCell = ({
-                          title,
-                          editable,
-                          children,
-                          dataIndex,
-                          record,
-                          handleSave,
-                          components,
-                          type,
-                          ...restProps
-                      }) => {
+const EditableCell = ({title, editable, children, dataIndex, record, handleSave, components, type, ...restProps}) => {
     const [editing, setEditing] = useState(false);
     const inputRef = useRef(null);
     const form = useContext(EditableContext);
@@ -78,7 +70,7 @@ const EditableCell = ({
                         },
                     ]}
                 >
-                    {components({onChange: save, onBlur: toggleEdit, ref: inputRef})}
+                    {components({onChange: save, onBlur: toggleEdit, ref: inputRef, record: record})}
                 </Form.Item>
             </>
         ) : (
@@ -98,28 +90,44 @@ const EditableCell = ({
 };
 
 function WaitList() {
-
     //hooks
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const {mutate: markedAsResolvedOrClosed} = useResolveSelectedTickets();
     const {mutate: updateState} = useUpdateStatus();
     let [filteredData, setFilteredData] = useState([]);
     let [filteredUserData, setFilteredUserData] = useState([]);
+    let {auth} = useAuth();
+    let [defaultAgency, setDefaultAgency] = useState(auth.agency);
+
+    //List WaitList
     const fetchWaitlist = () => {
-        return axios.get(API_URL+"tickets?status_ne=Résolu&status_ne=Fermé&agency=Bonanjo")
+        return axios.get(API_URL + "tickets/waitlist?offset=0&pageSize=10&source=" + defaultAgency)
     }
-    const {data: waitlist, isLoading} = useQuery("waitlist", fetchWaitlist)
     //List user
     const fetchUser = () => {
-        return axios.get(API_URL+"users")
+        return axios.get(API_USER_URL + "users")
     }
-    const {data: users} = useQuery("userlist", fetchUser)
+    //List Agency
+    const fetchAgency = () => {
+        return axios.get(API_USER_URL + "users/agencies")
+    }
+    //List Next Status
+    const fetchNextStatus = (statusID) => {
+        return axios.get(API_URL + "tickets/status?following="+statusID);
+    }
+    const {data: waitlist, refetch: refecthWaitList, isLoading} = useQuery("waitlist", fetchWaitlist)
+    const {data: users} = useQuery("userlist", fetchUser, {enabled: false})
+    const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgency)
 
     useEffect(() => {
-        setFilteredData(waitlist?.data);
-        setFilteredUserData(users?.data);
-    }, [waitlist, users])
-
+        setFilteredData(waitlist?.data.content);
+    }, [waitlist]);
+    useEffect(() => {
+        setFilteredUserData(users?.data.content);
+    }, [users]);
+    useEffect(() => {
+        refecthWaitList().then(() => {});
+    }, [defaultAgency])
 
     //functions
     const onSelectChange = (newSelectedRowKeys) => {
@@ -160,18 +168,25 @@ function WaitList() {
             className: 'table_cell--width',
             render: (text) => <p>{new DOMParser().parseFromString(text, 'text/html').body.textContent}</p>
         },
-
         {
             title: 'Emetteur',
             dataIndex: 'reporter',
             key: 'reporter',
+            sorter: {
+                compare: (a, b) => a.reporter.length - b.reporter.length,
+                multiple: 1,
+            }
         },
         {
             title: 'Attribuer à',
-            dataIndex: 'assignee',
+            dataIndex: 'assigned_to',
             key: 'assignee',
             editable: true,
             type: "select",
+            sorter: {
+                compare: (a, b) => a.assigned_to.length - b.assigned_to.length,
+                multiple: 2,
+            },
             components: ({onChange, onBlur, ref}) => {
                 return (
                     <AutoComplete
@@ -184,47 +199,84 @@ function WaitList() {
                         placeholder="Rechercher les utilisateurs" ref={ref}
                     >
                         {filteredUserData.map((user, key) => (
-                            <Option key={user.username+key} value={user.username}>
+                            <Option key={user.username + key} value={user.username}>
                                 {user.username}
                             </Option>
                         ))}
                     </AutoComplete>)
-            }
+            },
         },
-
         {
             title: 'Statut',
             dataIndex: 'status',
             key: 'status',
+            filters: [
+                {
+                    text: 'Nouveau',
+                    value: 'Nouveau',
+                },
+                {
+                    text: 'Assigné',
+                    value: 'Assigné',
+                },
+                {
+                    text: 'En cours',
+                    value: 'En cours',
+                }
+            ],
+            onFilter: (value, record) => record.status.statusLabel.indexOf(value) === 0,
             render: (status, record) => {
                 return (
-                    <Select defaultValue={status} style={{width: "98px"}}
+                    <Select defaultValue={status.statusLabel} style={{width: "98px"}}
                             onChange={(status) => {
                                 updateState({id: record.id, status: status})
                             }}>
-                        <Option value="Nouveau">Nouveau</Option>
+                        <Option value={status.statusId}>{status.statusLabel}</Option>{/*
                         <Option value="Assigné">Assigné</Option>
                         <Option value="En cours">En cours</Option>
                         <Option value="Résolu">Résolu</Option>
-                        <Option value="Fermé">Fermé</Option>
+                        <Option value="Fermé">Fermé</Option>*/}
                     </Select>
                 )
-            }
+            },
         },
         {
             title: 'Departement',
             dataIndex: 'department',
             key: 'department',
+            sorter: {
+                compare: (a, b) => a.department.length - b.department.length,
+                multiple: 3,
+            }
         },
         {
             title: 'Priorité',
             key: 'priority',
             dataIndex: 'priority',
+            filters: [
+                {
+                    text: 'Urgent',
+                    value: 'Urgent',
+                },
+                {
+                    text: 'Important',
+                    value: 'Important',
+                },
+                {
+                    text: 'Moyen',
+                    value: 'Moyen',
+                },
+                {
+                    text: 'Normal',
+                    value: 'Normal',
+                }
+            ],
+            onFilter: (value, record) => record.priority.priorityLabel.indexOf(value) === 0,
             render: (priority) => {
-                let color = priority === 'Urgent' ? 'red' : priority === 'Important' ? 'volcano' : priority === 'Moyen' ? 'orange' : 'cyan';
+                let color = priority.priorityLabel === 'Urgent' ? 'red' : priority.priorityLabel === 'Important' ? 'volcano' : priority.priorityLabel === 'Moyen' ? 'orange' : 'cyan';
                 return (
                     <Tag color={color} key={priority}>
-                        {priority.toUpperCase()}
+                        {priority.priorityLabel.toUpperCase()}
                     </Tag>
                 );
             }
@@ -233,19 +285,21 @@ function WaitList() {
             title: 'Catégorie',
             dataIndex: 'category',
             key: 'category',
+            render: (category) => category.name
         },
         {
             title: 'Émis le',
             dataIndex: 'created_at',
             key: 'created_at',
+            render: (created_at) => moment(created_at).fromNow()
         }
     ];
     // Search In table
     const onSearch = (value) => {
         if (value !== '') {
-            setFilteredData(waitlist?.data.filter((data) => data.title.toLowerCase().includes(value.toLowerCase()) || data.description.toLowerCase().includes(value.toLowerCase())))
+            setFilteredData(waitlist?.data.content.filter((data) => data.title.toLowerCase().includes(value.toLowerCase()) || data.description.toLowerCase().includes(value.toLowerCase())))
         } else {
-            setFilteredData(waitlist?.data);
+            setFilteredData(waitlist?.data.content);
         }
     };
     //Custom Construct Data Colum and Cell
@@ -282,12 +336,21 @@ function WaitList() {
         };
     });
 
-
     if (isLoading) return (<CustomLoader/>)
     return (
         <>
             <PageHeader
                 title="Tous les tickets"
+                extra={[
+                    <Typography.Title level={5} key="title">Agence : </Typography.Title>,
+                    (!isAgencyLoading && (
+                        <Select key="select" size="large" style={{width: 200}} defaultValue={defaultAgency}
+                                onChange={(value) => setDefaultAgency(value)}>
+                            {agencies?.data.map((agency) => {
+                                return (<Option key={agency.id} value={agency.name}>{agency.name}</Option>)
+                            })}
+                        </Select>))
+                ]}
             />
             {hasSelected ? <Space style={{marginBottom: 12, display: 'flex', justifyContent: 'end'}}>
                 <Button onClick={() => markSelectedAsSolvedOrClosed("Résolu")} icon={<CheckOutlined/>}>Marquer comme

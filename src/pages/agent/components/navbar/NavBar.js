@@ -27,7 +27,7 @@ const NavBar = () => {
         setIsOpen(false);
     };
 
-    //Create Ticket
+    //Create ticket
     const handleCreate = () => {
         setConfirmLoading(true);
         let ticket = form.getFieldsValue();
