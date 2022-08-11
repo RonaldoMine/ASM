@@ -2,49 +2,64 @@ import {Column, Pie} from '@ant-design/plots';
 import {Card, Col, DatePicker, PageHeader, Row, Select, Statistic} from "antd";
 import Moment from "moment";
 import 'moment/locale/fr';
-import React from "react";
+import React, {useEffect, useState} from "react";
 import useAuth from "../../../../auth/hook/useAuth";
 import axios from "axios";
 import {API_URL, API_USER_URL} from "../../../../global/axios";
 import {useQuery} from "react-query";
 import locale from 'antd/es/date-picker/locale/fr_FR';
 import './CustomStatistic.css';
+import {PRIMARY_COLOR, SUCCESS_COLOR, WARNING_COLOR} from "../../../../global/colors";
+
+//Axios functions
+const fetchAgency = () => {
+    return axios.get(API_USER_URL + "users/agencies")
+}
+
+const fetchIncidentStats = (agency, startDate, endDate) => {
+    return axios.get(API_URL + `tickets/stats/incidents?source=${agency}&startDate=${startDate.format("YYYY-MM-DD")}&endDate=${endDate.format("YYYY-MM-DD")}`)
+}
+
+//Other Functions
+const onChangeDate = (value, setStartDate, setEndDate) => {
+    const [from, to] = value;
+    setStartDate(from);
+    setEndDate(to);
+}
 
 function CustomStatistic() {
     // Hooks
     let {auth} = useAuth();
-    //Functions
-    //List Agency
-    const fetchAgency = () => {
-        return axios.get(API_USER_URL+"users/agencies")
-    }
-    const onChangeDate = (value) => {
-        const [to, from] = value;
-        console.log(Moment(to).format("YYYY-MM-DD"))
-        console.log(Moment(from).format("YYYY-MM-DD"))
-        console.log(Moment(Moment.now()).format("YYYY-MM-DD"))
-    }
+    let [startDate, setStartDate] = useState(new Moment(Moment.now()));
+    let [endDate, setEndDate] = useState(new Moment(Moment.now()));
+
     const {data: agencies} = useQuery("agencieslist", fetchAgency)
+    const {
+        data: statsIncidents,
+        refetch: refetchStatsIncident
+    } = useQuery(["statsincidents", auth.agency], () => fetchIncidentStats(auth.agency, startDate, endDate))
+    useEffect(() => {
+        refetchStatsIncident().then(() => {
+        });
+    }, [startDate, endDate])
+
+    //Data
     const dataPie = [
         {
-            type: 'Nouveau',
-            value: 27,
+            type: 'Nouveaux',
+            value: statsIncidents.data.allNewIncidents,
         },
         {
-            type: 'Résolu',
-            value: 25,
+            type: 'Résolus',
+            value: statsIncidents?.data.allSolvedIncidents,
         },
         {
             type: 'En cours',
-            value: 18,
+            value: statsIncidents?.data.allProcessingIncidents,
         },
         {
-            type: 'Assigné',
-            value: 15,
-        },
-        {
-            type: 'Fermé',
-            value: 10,
+            type: 'Fermés',
+            value: statsIncidents?.data.allClosedIncidents,
         },
     ];
     const config = {
@@ -156,25 +171,17 @@ function CustomStatistic() {
         xField: 'month',
         yField: 'value',
         seriesField: 'name',
-
-        /** 设置颜色 */
-        //color: ['#1ca9e6', '#f88c24'],
-
-        /** 设置间距 */
-        // marginRatio: 0.1,
         label: {
-            // 可手动配置 label 数据标签位置
             position: 'middle',
             // 'top', 'middle', 'bottom'
-            // 可配置附加的布局方法
             layout: [
                 // 柱形图数据标签位置自动调整
                 {
                     type: 'interval-adjust-position',
-                }, // 数据标签防遮挡
+                },
                 {
                     type: 'interval-hide-overlap',
-                }, // 数据标签文颜色自动调整
+                },
                 {
                     type: 'adjust-color',
                 },
@@ -187,33 +194,49 @@ function CustomStatistic() {
                         <Select key="select" size="large" style={{width: 200}} defaultValue={auth.agency}
                                 onChange={(value) => console.log(value)}>
                             {agencies?.data.map((agency) => {
-                                return (<Select.Option key={agency.id} value={agency.name}>{agency.name}</Select.Option>)
+                                return (
+                                    <Select.Option key={agency.id} value={agency.name}>{agency.name}</Select.Option>)
                             })}
                         </Select>,
-                        <DatePicker.RangePicker locale={locale} style={{padding: "8px 11px 8px"}} key="datepicker" value={[new Moment(Moment.now()), new Moment(Moment.now())]}
-                                                onChange={value => onChangeDate(value)}
+                        <DatePicker.RangePicker locale={locale} style={{padding: "8px 11px 8px"}} key="datepicker"
+                                                value={[startDate, endDate]}
+                                                onChange={value => onChangeDate(value, setStartDate, setEndDate)}
                         />
                     ]}
         ></PageHeader>
-        <Row style={{ padding: 40}}>
-            <Col span={6}>
+        <Row style={{padding: 40}}>
+            <Col span={8}>
                 <Card className='card-stats'>
-                    <Statistic title="Tickets" value={1000} />
+                    <Statistic title="Tous les tickets" value={statsIncidents?.data.allIncidentsBetween}/>
                 </Card>
             </Col>
-            <Col span={6}>
+            <Col span={8}>
                 <Card className='card-stats'>
-                    <Statistic title="Agences" value={50} />
+                    <Statistic title="Nouveaux tickets" valueStyle={{color: PRIMARY_COLOR}}
+                               value={statsIncidents?.data.allNewIncidents}/>
                 </Card>
             </Col>
-            <Col span={6}>
+            <Col span={8}>
                 <Card className='card-stats'>
-                    <Statistic title="Articles" value={40} />
+                    <Statistic title="Tickets résolus / fermés" valueStyle={{color: SUCCESS_COLOR}}
+                               value={statsIncidents?.data.allSolvedorClosedIncidents}/>
                 </Card>
             </Col>
-            <Col span={6}>
+            <Col span={8}>
                 <Card className='card-stats'>
-                    <Statistic title="Utilisateurs" value={40} />
+                    <Statistic title="Tickets en cours" valueStyle={{color: WARNING_COLOR}}
+                               value={statsIncidents?.data.allProcessingIncidents}/>
+                </Card>
+            </Col>
+            <Col span={8}>
+                <Card className='card-stats'>
+                    <Statistic title="Tickets résolus" valueStyle={{color: SUCCESS_COLOR}}
+                               value={statsIncidents?.data.allSolvedIncidents}/>
+                </Card>
+            </Col>
+            <Col span={8}>
+                <Card className='card-stats'>
+                    <Statistic title="Tickets fermés" value={statsIncidents?.data.allClosedIncidents}/>
                 </Card>
             </Col>
         </Row>

@@ -22,6 +22,9 @@ const {Option} = Select;
 const fetchCategories = () => {
     return axios.get(API_URL + "tickets/categories/parent")
 }
+const fetchSubCategories = (categoryID) => {
+    return axios.get(API_URL + "tickets/categories/" + categoryID + "/subcategories")
+}
 
 const NavBar = () => {
 
@@ -38,15 +41,19 @@ const NavBar = () => {
     const {data: categories} = useQuery("categorieslist", fetchCategories)
 
     useEffect(() => {
-        setTreeData(categories?.data.map((category) => {
-            return {
-                id: category.categoryId,
-                title: category.name,
-                value: category.categoryId,
-                pId: category.level,
-                isLeaf: true,
-            };
-        }))
+        if (treeData && treeData.length > 0) {
+            setTreeData(treeData);
+        } else {
+            setTreeData(categories?.data.map((category) => {
+                return {
+                    id: category.categoryId,
+                    title: category.name,
+                    value: category.categoryId,
+                    pId: category.level,
+                    isLeaf: !category.hasChild
+                };
+            }))
+        }
     }, [categories])
 
     const handleCancel = () => {
@@ -87,23 +94,29 @@ const NavBar = () => {
         })
     };
 
-    const genTreeNode = (parentId, isLeaf = false) => {
-        const random = Math.random().toString(36).substring(2, 6);
+    const genTreeNode = ({parent, categoryId, name, hasChild}) => {
         return {
-            id: random,
-            pId: parentId,
-            value: random,
-            title: isLeaf ? 'Tree Node' : 'Expand to load',
-            isLeaf,
+            id: categoryId,
+            pId: parent,
+            value: categoryId,
+            title: name,
+            isLeaf: !hasChild
         };
     };
 
     const onLoadData = ({id}) =>
         new Promise((resolve) => {
-            setTreeData(
-                treeData.concat([genTreeNode(id, false), genTreeNode(id, true), genTreeNode(id, true)]),
-            );
-            resolve(undefined);
+            const data = fetchSubCategories(id);
+            data.then((data) => {
+                let newCategories = data.data.map((category) => {
+                    return genTreeNode(category);
+                })
+                setTreeData(
+                    treeData.concat(newCategories),
+                );
+            }).finally(() => {
+                resolve(undefined);
+            });
         });
 
     const onChange = (newValue) => {
@@ -233,6 +246,7 @@ const NavBar = () => {
                         </Select>*/}
                         <TreeSelect
                             treeDataSimpleMode
+                            allowClear={true}
                             style={{width: '100%'}}
                             value={valueTreeCategories}
                             dropdownStyle={{maxHeight: 400, overflow: 'auto'}}
