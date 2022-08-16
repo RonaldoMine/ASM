@@ -1,8 +1,5 @@
 import {Avatar} from "antd";
-import {Typography} from "antd";
 import useAuth from "../../../../auth/hook/useAuth";
-
-const  { Title } = Typography;
 
 function Account() {
     const { auth } = useAuth();
