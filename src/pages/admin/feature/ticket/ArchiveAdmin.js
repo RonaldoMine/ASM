@@ -17,7 +17,7 @@ function ArchiveAdmin() {
 
     //List Archives
     const fetchArchive = () => {
-        return axios.get(API_URL+"tickets/archive?offset=0&pageSize=10&source="+defaultAgency)
+        return axios.get(API_URL+"tickets/archive?page=1&pageSize=10&source="+defaultAgency)
     }
     //List Agency
     const fetchAgency = () => {

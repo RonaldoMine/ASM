@@ -101,7 +101,7 @@ function WaitList() {
 
     //List WaitList
     const fetchWaitlist = () => {
-        return axios.get(API_URL + "tickets/waitlist?offset=0&pageSize=10&source=" + defaultAgency)
+        return axios.get(API_URL + "tickets/waitlist?page=1&pageSize=10&source=" + defaultAgency)
     }
     //List user
     const fetchUser = () => {

@@ -38,23 +38,16 @@ const NavBar = () => {
     const {auth, signOut} = useAuth();
     const navigate = useNavigate();
     const [treeData, setTreeData] = useState([]);
-    const {data: categories} = useQuery("categorieslist", fetchCategories)
+    const {data: categories} = useQuery("categorieslist", fetchCategories, {onSuccess: (data) => setTreeData(data?.data.map((category) => genTreeNode(category)))})
 
-    useEffect(() => {
+    /*useEffect(() => {
         if (treeData && treeData.length > 0) {
             setTreeData(treeData);
         } else {
-            setTreeData(categories?.data.map((category) => {
-                return {
-                    id: category.categoryId,
-                    title: category.name,
-                    value: category.categoryId,
-                    pId: category.level,
-                    isLeaf: !category.hasChild
-                };
-            }))
+            setTreeData(categories?.data.map((category) => genTreeNode(category)))
         }
-    }, [categories])
+    }, [categories])*/
+
 
     const handleCancel = () => {
         if (form.isFieldsTouched(["title", "description"])) {
@@ -111,9 +104,7 @@ const NavBar = () => {
                 let newCategories = data.data.map((category) => {
                     return genTreeNode(category);
                 })
-                setTreeData(
-                    treeData.concat(newCategories),
-                );
+                setTreeData(treeData.concat(newCategories));
             }).finally(() => {
                 resolve(undefined);
             });
@@ -252,7 +243,7 @@ const NavBar = () => {
                             dropdownStyle={{maxHeight: 400, overflow: 'auto'}}
                             placeholder="Please select"
                             onChange={onChange}
-                            loadData={onLoadData}
+                            //loadData={onLoadData}
                             treeData={treeData}
                         />
                     </Form.Item>
