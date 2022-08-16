@@ -15,6 +15,10 @@ import Suggestion from './pages/admin/feature/suggestion/Suggestion';
 import Missing from './components/missing/Missing';
 import WaitList from "./pages/admin/feature/WaitList";
 import CustomStatistic from "./pages/admin/feature/dashboard/CustomStatistic";
+import RequireAuth from "./auth/component/RequireAuth";
+import {ROLE_ADMIN, ROLE_SUPER_ADMIN} from "./global/roles";
+import Unauthorized from "./auth/unauthorized/Unauthorized";
+import Account from "./pages/admin/feature/account/Account";
 
 const qc = new QueryClient();
 
@@ -42,14 +46,18 @@ function App() {
                         </Route>
                         <Route path="suggestions" element={<Suggestion/>}/>
                     </Route>
-                    <Route path="dashboard">
+                    <Route path="dashboard" element={<RequireAuth allowedRoles={[ROLE_SUPER_ADMIN, ROLE_ADMIN]}/>}>
                         <Route path="stats" element={<CustomStatistic/>}></Route>
+                    </Route>
+                    <Route path="settings">
+                        <Route path="account" element={<Account/>}></Route>
                     </Route>
                 </Route>
                 <Route path="/agent" element={<Agent/>}>
                     <Route index element={<AgentTickets/>}/>
                 </Route>
                 <Route path="*" element={<Missing/>}/>
+                <Route path="/unauthorized" element={<Unauthorized/>}/>
             </Routes>
         </QueryClientProvider>
     );

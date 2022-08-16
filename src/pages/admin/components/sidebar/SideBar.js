@@ -2,6 +2,7 @@ import React from 'react';
 import {SideBarData} from './SideBarData';
 import {Layout, Menu} from 'antd';
 import {useLocation, useNavigate} from 'react-router-dom';
+import useAuth from "../../../../auth/hook/useAuth";
 
 const {Sider} = Layout;
 
@@ -10,12 +11,12 @@ const SideBar = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const {auth} = useAuth();
     const pathname = location.pathname;
     const menuParent = pathname.split('/')[2];
     const menuChild = pathname.split('/')[3];
-
 //Get the Sidebar item data and map items
-    const items2 = SideBarData.map(
+    const items2 = SideBarData(auth).map(
         (elmt, index) => {
             return {
                 key: `${elmt.path}`,

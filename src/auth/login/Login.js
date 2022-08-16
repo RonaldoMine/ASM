@@ -34,7 +34,7 @@ function Login() {
             //console.log(JSON.stringify(response));
             const { username, email, agency, role, department } = response?.data
             signIn({ username, email, agency, role, department });
-            navigate(`${from+role.substring(5).toLowerCase()}/general/tickets`, { replace: true });
+            navigate(`/admin/general/tickets`, { replace: true });
         } catch (err) {
             if (!err?.response) {
                 message.error("Aucune réponse du serveur")

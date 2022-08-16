@@ -47,7 +47,7 @@ function CustomStatistic() {
     const dataPie = [
         {
             type: 'Nouveaux',
-            value: statsIncidents.data.allNewIncidents,
+            value: statsIncidents?.data.allNewIncidents,
         },
         {
             type: 'Résolus',

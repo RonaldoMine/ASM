@@ -1,5 +1,5 @@
 //imports
-import React, {useEffect, useState} from 'react'
+import React, {useState} from 'react'
 import {Avatar, Button, Form, Input, Layout, message, Modal, Select, Space, TreeSelect} from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
