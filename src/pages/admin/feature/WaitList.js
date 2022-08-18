@@ -1,9 +1,22 @@
-import {AutoComplete, Button, Form, Input, PageHeader, Select, Space, Table, Tag, Typography} from 'antd';
+import {
+    AutoComplete,
+    Button,
+    Dropdown,
+    Form,
+    Input,
+    Menu,
+    PageHeader,
+    Select,
+    Space,
+    Table,
+    Tag,
+    Typography
+} from 'antd';
 import {useQuery} from 'react-query'
 import {Link} from "react-router-dom";
 import axios from 'axios'
 import {useUpdateStatus} from './hooks/useUpdateStatus';
-import {CheckOutlined, LockOutlined} from "@ant-design/icons";
+import {CheckOutlined, DownloadOutlined, LockOutlined} from "@ant-design/icons";
 import './TableSharedStyle.css'
 import {useResolveSelectedTickets} from './hooks/useResolveSelectedTickets';
 import React, {useContext, useEffect, useRef, useState} from 'react';
@@ -11,9 +24,12 @@ import CustomLoader from '../components/custom/CustomLoader';
 import useAuth from "../../../auth/hook/useAuth";
 import {API_URL, API_USER_URL} from "../../../global/axios";
 import moment from "moment/moment";
+import {utils as utilsXLXS, writeFile} from "xlsx";
 
 const {Option} = Select;
 const EditableContext = React.createContext(null);
+
+//Functions
 
 const EditableRow = ({index, ...props}) => {
     const [form] = Form.useForm();
@@ -89,6 +105,21 @@ const EditableCell = ({title, editable, children, dataIndex, record, handleSave,
     return <td {...restProps}>{childNode}</td>;
 };
 
+const MenusExport = (handleExportTicket) => (
+    <Menu
+        items={[
+            {
+                label: <a title='PDF' onClick={() => handleExportTicket("PDF")}>PDF</a>,
+                key: 'pdf',
+            },
+            {
+                label: <a title='EXCEL' onClick={() => handleExportTicket("EXCEL")}>EXCEL</a>,
+                key: 'excel',
+            },
+        ]}
+    />
+);
+
 function WaitList() {
     //hooks
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -98,6 +129,7 @@ function WaitList() {
     let [filteredUserData, setFilteredUserData] = useState([]);
     let {auth} = useAuth();
     let [defaultAgency, setDefaultAgency] = useState(auth.agency);
+    const tableRef = useRef(null);
 
     //List WaitList
     const fetchWaitlist = () => {
@@ -113,7 +145,7 @@ function WaitList() {
     }
     //List Next Status
     const fetchNextStatus = (statusID) => {
-        return axios.get(API_URL + "tickets/status?following="+statusID);
+        return axios.get(API_URL + "tickets/status?following=" + statusID);
     }
     const {data: waitlist, refetch: refecthWaitList, isLoading} = useQuery("waitlist", fetchWaitlist)
     const {data: users} = useQuery("userlist", fetchUser, {enabled: false})
@@ -126,7 +158,8 @@ function WaitList() {
         setFilteredUserData(users?.data.content);
     }, [users]);
     useEffect(() => {
-        refecthWaitList().then(() => {});
+        refecthWaitList().then(() => {
+        });
     }, [defaultAgency])
 
     //functions
@@ -143,6 +176,29 @@ function WaitList() {
         selectedRowKeys.forEach((ticketId) => {
             markedAsResolvedOrClosed({ticketId: ticketId, status: action})
         })
+    }
+    const handleExportTicket = (type) => {
+        if (type === 'EXCEL') {
+            let datas = filteredData.filter((data) => selectedRowKeys.includes(data.id));
+            let wb = utilsXLXS.book_new();
+            let ws = utilsXLXS.json_to_sheet(datas.map((data) => {
+                return {
+                    Titre: data.title,
+                    Description: data.description,
+                    Emetteur: data.reporter,
+                    'Attribuer à': data.assigned_to,
+                    Status: data.status.statusLabel,
+                    Departement: data.department,
+                    'Priorité': data.priority.priorityLabel,
+                    'Catégorie': data.category.name,
+                    'Émis le': moment(data.createdAt).format('MM-DD-YYYY'),
+                };
+            }));
+            utilsXLXS.book_append_sheet(wb, ws, "Classeur 1");
+            writeFile(wb, "Listes des Tickets.xlsx");
+        } else {
+
+        }
     }
     //Filter users in table
     const onSearchUser = (value) => {
@@ -291,11 +347,12 @@ function WaitList() {
             title: 'Émis le',
             dataIndex: 'created_at',
             key: 'created_at',
-            render: (created_at) => moment(created_at).fromNow()
+            render: (createdAt, record) => moment(record.createdAt).fromNow()
         }
     ];
     // Search In table
     const onSearch = (value) => {
+        setSelectedRowKeys([]);
         if (value !== '') {
             setFilteredData(waitlist?.data.content.filter((data) => data.title.toLowerCase().includes(value.toLowerCase()) || data.description.toLowerCase().includes(value.toLowerCase())))
         } else {
@@ -357,10 +414,14 @@ function WaitList() {
                     résolu</Button>
                 <Button onClick={() => markSelectedAsSolvedOrClosed("Fermé")} icon={<LockOutlined/>}>Fermer les
                     tickets</Button>
+                <Dropdown overlay={MenusExport(handleExportTicket)} trigger={['click']} overlayStyle={{ width: 70}}>
+                    <Button icon={<DownloadOutlined />}></Button>
+                </Dropdown>
             </Space> : ''}
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}
                           style={{width: 300, marginBottom: 20}}/>
             <Table
+                ref={tableRef}
                 components={components}  //Add new Custom Cell and Row
                 columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id"
                 dataSource={filteredData} className="all-tickets_table" scroll={{x: "true"}}/>

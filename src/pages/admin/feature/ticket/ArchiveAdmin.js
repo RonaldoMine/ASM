@@ -149,7 +149,7 @@ function ArchiveAdmin() {
             title: 'Émis le',
             dataIndex: 'created_at',
             key: 'created_at',
-            render:(created_at) => moment(created_at).fromNow()
+            render: (createdAt, record) => moment(record.createdAt).fromNow()
         }
     ];
 
