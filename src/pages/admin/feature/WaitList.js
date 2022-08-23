@@ -15,6 +15,7 @@ import moment from "moment/moment";
 const {Option} = Select;
 const EditableContext = React.createContext(null);
 
+//Editable Row component
 const EditableRow = ({index, ...props}) => {
     const [form] = Form.useForm();
     return (
@@ -26,6 +27,7 @@ const EditableRow = ({index, ...props}) => {
     );
 };
 
+//Editable Cell component
 const EditableCell = ({title, editable, children, dataIndex, record, handleSave, components, type, ...restProps}) => {
     const [editing, setEditing] = useState(false);
     const inputRef = useRef(null);
@@ -89,6 +91,7 @@ const EditableCell = ({title, editable, children, dataIndex, record, handleSave,
     return <td {...restProps}>{childNode}</td>;
 };
 
+//Waitlist component
 function WaitList() {
     //hooks
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -98,10 +101,15 @@ function WaitList() {
     let [filteredUserData, setFilteredUserData] = useState([]);
     let {auth} = useAuth();
     let [defaultAgency, setDefaultAgency] = useState(auth.agency);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+    });
 
     //List WaitList
-    const fetchWaitlist = () => {
-        return axios.get(API_URL + "tickets/waitlist?offset=0&pageSize=10&source=" + defaultAgency)
+    const fetchWaitlist = (page, pageSize) => {
+        return axios.get(API_URL + `tickets/waitlist?page=${page}&pageSize=${pageSize}&source=` + defaultAgency)
+
     }
     //List user
     const fetchUser = () => {
@@ -115,18 +123,24 @@ function WaitList() {
     const fetchNextStatus = (statusID) => {
         return axios.get(API_URL + "tickets/status?following="+statusID);
     }
-    const {data: waitlist, refetch: refecthWaitList, isLoading} = useQuery("waitlist", fetchWaitlist)
+    const {data: waitlist, refetch: refecthWaitList, isLoading} = useQuery(["waitlist", pagination.current, pagination.pageSize], () => fetchWaitlist(pagination.current, pagination.pageSize), {
+        onSuccess: (data) => {
+            setFilteredData(data?.data.content);
+            setPagination({
+                ...pagination, total: data?.data.totalElements
+            });
+            
+        },
+        keepPreviousData: true
+    })
     const {data: users} = useQuery("userlist", fetchUser, {enabled: false})
     const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgency)
 
     useEffect(() => {
-        setFilteredData(waitlist?.data.content);
-    }, [waitlist]);
-    useEffect(() => {
         setFilteredUserData(users?.data.content);
     }, [users]);
     useEffect(() => {
-        refecthWaitList().then(() => {});
+        refecthWaitList();
     }, [defaultAgency])
 
     //functions
@@ -336,7 +350,6 @@ function WaitList() {
         };
     });
 
-    if (isLoading) return (<CustomLoader/>)
     return (
         <>
             <PageHeader
@@ -360,10 +373,15 @@ function WaitList() {
             </Space> : ''}
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}
                           style={{width: 300, marginBottom: 20}}/>
-            <Table
-                components={components}  //Add new Custom Cell and Row
+            {!isLoading ? <Table
+                components={components}//Add new Custom Cell and Row
+                pagination={{
+                    ...pagination, showSizeChanger: true, onChange: (page, pageSize) => {
+                        setPagination({current: page, pageSize: pageSize})
+                    }
+                }}
                 columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id"
-                dataSource={filteredData} className="all-tickets_table" scroll={{x: "true"}}/>
+                dataSource={filteredData} className="all-tickets_table" scroll={{x: "true"}}/> : <CustomLoader/>}
 
         </>
     )
