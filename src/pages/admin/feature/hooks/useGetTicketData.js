@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from 'react-query'
+import {useQuery} from 'react-query'
 import axios from 'axios'
 import {API_URL} from "../../../../global/axios";
 
@@ -9,10 +9,10 @@ const fetchTicketData = ({ queryKey }) => {
 
 export const useGetTicketData = (ticketId) => {
 
-    const qc = useQueryClient();
+    //const qc = useQueryClient();
 
     return useQuery(['ticketData', ticketId], fetchTicketData, {
-        initialData: () => {
+       /* initialData: () => {
             const ticket = qc.getQueryData('waitlist')?.data?.find(ticket => ticket.id === parseInt(ticketId));
 
             if (ticket) {
@@ -21,11 +21,6 @@ export const useGetTicketData = (ticketId) => {
             else {
                 return undefined
             }
-        }
-
+        }*/
     })
-
-
-
-
 }

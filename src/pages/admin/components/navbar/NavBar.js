@@ -1,5 +1,5 @@
 //imports
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import {Avatar, Button, Form, Input, Layout, message, Modal, Select, Space, TreeSelect} from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
@@ -26,6 +26,28 @@ const fetchSubCategories = (categoryID) => {
     return axios.get(API_URL + "tickets/categories/" + categoryID + "/subcategories")
 }
 
+function onLoadData (id, dataIdIsLoaded, setDataIsIsLoaded, genTreeNode, treeData, setTreeData){
+    console.log(id)
+    return new Promise((resolve) => {
+        if (!dataIdIsLoaded.includes(id)){
+            setDataIsIsLoaded([...dataIdIsLoaded, id]);
+            const data = fetchSubCategories(id);
+            data.then((data) => {
+                let newCategories = data.data.map((category) => {
+                    return genTreeNode(category);
+                })
+                setTreeData([...treeData, ...newCategories]);
+            }).finally(() => {
+                resolve(null);
+            });
+        }else{
+            console.log('Le mec existe déjà');
+            resolve(null);
+        }
+    });
+}
+
+
 const NavBar = () => {
 
     //Hooks
@@ -38,15 +60,14 @@ const NavBar = () => {
     const {auth, signOut} = useAuth();
     const navigate = useNavigate();
     const [treeData, setTreeData] = useState([]);
-    const {data: categories} = useQuery("categorieslist", fetchCategories, {onSuccess: (data) => setTreeData(data?.data.map((category) => genTreeNode(category)))})
+    const [dataIdIsLoaded, setDataIsIsLoaded] = useState([]);
+    //const {data: categories} = useQuery("categorieslist", fetchCategories, {onSuccess: (data) => setTreeData(data?.data.map((category) => genTreeNode(category)))})
+    const {data: categories} = useQuery("categorieslist", fetchCategories)
 
-    /*useEffect(() => {
-        if (treeData && treeData.length > 0) {
-            setTreeData(treeData);
-        } else {
-            setTreeData(categories?.data.map((category) => genTreeNode(category)))
-        }
-    }, [categories])*/
+    useEffect(() => {
+        setTreeData(categories?.data.map((category) => genTreeNode(category)))
+        setDataIsIsLoaded([]);
+    }, [categories]);
 
 
     const handleCancel = () => {
@@ -77,7 +98,7 @@ const NavBar = () => {
         setConfirmLoading(true);
         form.validateFields()
             .then(value => {
-                addTicket({...value, resolved: "false", closed_at: ""});
+                addTicket({...value, category: value.category.toString(), type: "0", resolved: "false", closed_at: ""});
                 form.resetFields()
                 setIsOpen(false);
                 setConfirmLoading(false);
@@ -97,22 +118,9 @@ const NavBar = () => {
         };
     };
 
-    const onLoadData = ({id}) =>
-        new Promise((resolve) => {
-            const data = fetchSubCategories(id);
-            data.then((data) => {
-                let newCategories = data.data.map((category) => {
-                    return genTreeNode(category);
-                })
-                setTreeData(treeData.concat(newCategories));
-            }).finally(() => {
-                resolve(undefined);
-            });
-        });
-
-    const onChange = (newValue) => {
-        console.log(newValue);
-        setValueTreeCategories(newValue);
+    const onChange = (value, label, extra) => {
+        console.log(extra);
+        setValueTreeCategories(label[0]);
     };
 
     return (
@@ -237,14 +245,14 @@ const NavBar = () => {
                         </Select>*/}
                         <TreeSelect
                             treeDataSimpleMode
-                            allowClear={true}
                             style={{width: '100%'}}
                             value={valueTreeCategories}
                             dropdownStyle={{maxHeight: 400, overflow: 'auto'}}
-                            placeholder="Please select"
+                            placeholder="Choisir la catégories"
                             onChange={onChange}
-                            //loadData={onLoadData}
+                            loadData={({id}) => onLoadData(id, dataIdIsLoaded, setDataIsIsLoaded, genTreeNode, treeData, setTreeData)}
                             treeData={treeData}
+                            //treeLoadedKeys={[]}
                         />
                     </Form.Item>
 

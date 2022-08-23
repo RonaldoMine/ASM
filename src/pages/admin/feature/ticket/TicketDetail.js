@@ -32,6 +32,7 @@ import {useUpdateStatus} from "../hooks/useUpdateStatus";
 import CustomLoader from "../../components/custom/CustomLoader";
 import {useAddComment} from "../hooks/useAddComment";
 import {API_URL} from "../../../../global/axios";
+import moment from "moment";
 
 const { Panel } = Collapse;
 const { TextArea } = Input;
@@ -55,7 +56,7 @@ function TicketDetail() {
     //fetch ticket comments
     const fetchTicketComment = () => {
 
-        return axios.get(API_URL+`comments?ticket_id=${ticketId}`)
+        return axios.get(API_URL+`ticket/${ticketId}/comments`);
     }
 
     const { data: ticketCommentData, isLoading: loadingComment } = useQuery(["ticketComment", ticketId], fetchTicketComment)
@@ -105,12 +106,12 @@ function TicketDetail() {
     }
 
     //Display comments
-    const CommentList = ({ comments }) => (
+    const CommentList = ({ comments }) => ( comments &&
         <List
             dataSource={comments}
             header={`${comments.length} ${comments.length > 1 ? 'commentaires' : comments.length <= 1 && 'commentaire'}`}
             itemLayout="horizontal"
-            renderItem={(props) => <Comment avatar={<Avatar style={{ background: "#1890ff", color: "#fff" }}>{props.author[0]}</Avatar>} {...props} />}
+            renderItem={(props) => <Comment avatar={<Avatar style={{ background: "#1890ff", color: "#fff" }}>{props.author[0].toUpperCase()}</Avatar>} author={props.author} content={props.content} datetime={moment(props.createdAt).fromNow()} />}
         />
     );
 
@@ -207,7 +208,7 @@ function TicketDetail() {
                 </Col>
                 <Col span={8} style={{ padding: 5 }}>
                     <div>
-                        <Select defaultValue={ticket?.data.status} style={{ width: 120, marginBottom: 15 }}
+                        <Select defaultValue={ticket?.data.status.statusLabel} style={{ width: 120, marginBottom: 15 }}
                             onChange={(status) => {
                                 editStatus({ id: ticket?.data.id, status: status })
                             }}>
@@ -227,7 +228,7 @@ function TicketDetail() {
                                             Assigné
                                         </Col>
                                         <Col span="16">
-                                            <CustomAvatarUser value={ticket?.data.assignee} />
+                                            <CustomAvatarUser value={ticket?.data.assigned_to} />
                                         </Col>
                                     </Row>
                                     <Row>
@@ -243,7 +244,7 @@ function TicketDetail() {
                                             Status
                                         </Col>
                                         <Col span="16">
-                                            {ticket?.data.priority}
+                                            {ticket?.data.status.statusLabel}
                                         </Col>
                                     </Row>
                                     <Row>
@@ -251,7 +252,7 @@ function TicketDetail() {
                                             Catégorie
                                         </Col>
                                         <Col span="16">
-                                            {ticket?.data.category}
+                                            {ticket?.data.category.name}
                                         </Col>
                                     </Row>
                                 </Space>

@@ -30,7 +30,6 @@ const {Option} = Select;
 const EditableContext = React.createContext(null);
 
 //Functions
-
 const EditableRow = ({index, ...props}) => {
     const [form] = Form.useForm();
     return (
