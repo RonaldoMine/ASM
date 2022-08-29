@@ -1,21 +1,81 @@
 import React from "react";
-import { HomeOutlined, ExclamationCircleOutlined, BarsOutlined, InfoOutlined, DashboardOutlined, ContainerOutlined, ReadOutlined, LineChartOutlined, FolderOutlined, SettingOutlined, UserOutlined, ControlOutlined, QuestionOutlined } from '@ant-design/icons';
+import {
+    BarsOutlined,
+    ContainerOutlined,
+    ControlOutlined,
+    DashboardOutlined,
+    ExclamationCircleOutlined,
+    FolderOutlined,
+    HomeOutlined,
+    InfoOutlined,
+    LineChartOutlined,
+    QuestionOutlined,
+    ReadOutlined,
+    SettingOutlined,
+    UserOutlined
+} from '@ant-design/icons';
+import {ROLE_ADMIN, ROLE_AGENT, ROLE_SUPER_ADMIN} from "../../../../global/roles";
 
-export const SideBarData = [
+const dashboardMenu = (role) => {
+    if (role !== ROLE_AGENT) {
+        return [{
+            title: 'Tableau de bord',
+            path: 'dashboard',
+            icon: <DashboardOutlined/>,
+            subnav: [
+                {
+                    title: 'Statistiques',
+                    path: '/admin/dashboard/stats',
+                    icon: <LineChartOutlined/>
+                }
+            ],
+        }]
+    }
+    return [];
+};
+const settingMenu = (role) => {
+    let data = [
+        {
+            title: 'Mon Compte',
+            path: '/admin/settings/account',
+            icon: <UserOutlined/>
+        }
+    ];
+    if (role === ROLE_ADMIN || role === ROLE_SUPER_ADMIN){
+        data.push(
+            {
+                title: 'Catégories',
+                path: '/admin/settings/categories',
+                icon: <BarsOutlined/>
+            }
+        );
+    }
+    if (role === ROLE_SUPER_ADMIN) {
+        data.push(
+            {
+                title: 'Administration',
+                path: '/admin/settings/agencies',
+                icon: <ControlOutlined/>
+            }
+        )
+    }
+    return data;
+};
+export const SideBarData = (auth) => [
     {
         title: 'Général',
         path: 'general',
-        icon: <HomeOutlined />,
+        icon: <HomeOutlined/>,
         subnav: [
             {
-                title: 'Tickets',
+                title: auth.role === ROLE_AGENT ? 'Mes Tickets' : 'Tickets',
                 path: '/admin/general/tickets',
-                icon: <ExclamationCircleOutlined />,
+                icon: <ExclamationCircleOutlined/>,
             },
             {
-                title: 'Archives',
+                title: auth.role === ROLE_AGENT ? 'Mes Archives' : 'Archives',
                 path: '/admin/general/archives',
-                icon: <FolderOutlined />
+                icon: <FolderOutlined/>
             }
 
         ]
@@ -23,60 +83,32 @@ export const SideBarData = [
     {
         title: 'Informations',
         path: 'info',
-        icon: <InfoOutlined />,
+        icon: <InfoOutlined/>,
         subnav: [
             {
                 title: 'Base de connaissance',
                 path: '/admin/info/knowledge_base',
-                icon: <ReadOutlined />
+                icon: <ReadOutlined/>
             },
             {
-                title: 'Suggestions',
+                title: auth.role === ROLE_AGENT ? 'Mes suggestions' : 'Suggestions',
                 path: '/admin/info/suggestions',
-                icon: <ContainerOutlined />
+                icon: <ContainerOutlined/>
             },
             {
                 title: 'Aide',
                 path: '/admin/info/help',
-                icon: <QuestionOutlined />
+                icon: <QuestionOutlined/>
             }
 
         ]
     },
-    {
-        title: 'Tableau de bord',
-        path: 'dashboard',
-        icon: <DashboardOutlined />,
-        subnav: [
-            {
-                title: 'Statistiques',
-                path: '/admin/dashboard/stats',
-                icon: <LineChartOutlined />
-            }
-
-        ]
-    },
+    ...dashboardMenu(auth.role),
     {
         title: 'Paramètres',
         path: 'settings',
-        icon: <SettingOutlined />,
-        subnav: [
-            {
-                title: 'Compte',
-                path: '/admin/settings/account',
-                icon: <UserOutlined />
-            },
-            {
-                title: 'Administration',
-                path: '/admin/settings/agencies',
-                icon: <ControlOutlined />
-            },
-            {
-                title: 'Catégories',
-                path: '/admin/settings/categories',
-                icon: <BarsOutlined />
-            }
-        ]
+        icon: <SettingOutlined/>,
+        subnav: settingMenu(auth.role)
     }
 
 ]

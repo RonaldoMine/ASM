@@ -17,7 +17,7 @@ function ArchiveAdmin() {
 
     //List Archives
     const fetchArchive = () => {
-        return axios.get(API_URL+"tickets/archive?offset=0&pageSize=10&source="+defaultAgency)
+        return axios.get(API_URL+"tickets/archive?page=0&pageSize=10&source="+defaultAgency)
     }
     //List Agency
     const fetchAgency = () => {
@@ -149,7 +149,7 @@ function ArchiveAdmin() {
             title: 'Émis le',
             dataIndex: 'created_at',
             key: 'created_at',
-            render:(created_at) => moment(created_at).fromNow()
+            render: (createdAt, record) => moment(record.createdAt).fromNow()
         }
     ];
 
@@ -157,7 +157,7 @@ function ArchiveAdmin() {
     return (
         <>
             <PageHeader
-                title="Tous les archives"
+                title="Toutes les archives"
                 extra={[
                     <Typography.Title level={5} key="title">Agence : </Typography.Title>,
                     <Select key="select" size="large" style={{width: 200}} defaultValue={defaultAgency}

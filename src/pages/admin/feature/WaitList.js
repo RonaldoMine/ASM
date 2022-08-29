@@ -1,9 +1,22 @@
-import {AutoComplete, Button, Form, Input, PageHeader, Select, Space, Table, Tag, Typography} from 'antd';
+import {
+    AutoComplete,
+    Button,
+    Dropdown,
+    Form,
+    Input,
+    Menu,
+    PageHeader,
+    Select,
+    Space,
+    Table,
+    Tag,
+    Typography
+} from 'antd';
 import {useQuery} from 'react-query'
 import {Link} from "react-router-dom";
 import axios from 'axios'
 import {useUpdateStatus} from './hooks/useUpdateStatus';
-import {CheckOutlined, LockOutlined} from "@ant-design/icons";
+import {CheckOutlined, DownloadOutlined, LockOutlined} from "@ant-design/icons";
 import './TableSharedStyle.css'
 import {useResolveSelectedTickets} from './hooks/useResolveSelectedTickets';
 import React, {useContext, useEffect, useRef, useState} from 'react';
@@ -11,10 +24,12 @@ import CustomLoader from '../components/custom/CustomLoader';
 import useAuth from "../../../auth/hook/useAuth";
 import {API_URL, API_USER_URL} from "../../../global/axios";
 import moment from "moment/moment";
+import {utils as utilsXLXS, writeFile} from "xlsx";
 
 const {Option} = Select;
 const EditableContext = React.createContext(null);
 
+//Functions
 //Editable Row component
 const EditableRow = ({index, ...props}) => {
     const [form] = Form.useForm();
@@ -91,6 +106,18 @@ const EditableCell = ({title, editable, children, dataIndex, record, handleSave,
     return <td {...restProps}>{childNode}</td>;
 };
 
+const MenusExport = (handleExportTicket) => (
+    <Menu
+        items={[
+            {
+                label: <a title='EXCEL' onClick={() => handleExportTicket("EXCEL")}>EXCEL</a>,
+                key: 'excel',
+            },
+        ]}
+    />
+);
+
+
 //Waitlist component
 function WaitList() {
     //hooks
@@ -99,6 +126,7 @@ function WaitList() {
     const {mutate: updateState} = useUpdateStatus();
     let [filteredData, setFilteredData] = useState([]);
     let [filteredUserData, setFilteredUserData] = useState([]);
+    let [currentSelectedStatus, setCurrentSelectedStatus] = useState("");
     let {auth} = useAuth();
     let [defaultAgency, setDefaultAgency] = useState(auth.agency);
     const [pagination, setPagination] = useState({
@@ -109,7 +137,6 @@ function WaitList() {
     //List WaitList
     const fetchWaitlist = (page, pageSize) => {
         return axios.get(API_URL + `tickets/waitlist?page=${page}&pageSize=${pageSize}&source=` + defaultAgency)
-
     }
     //List user
     const fetchUser = () => {
@@ -120,10 +147,11 @@ function WaitList() {
         return axios.get(API_USER_URL + "users/agencies")
     }
     //List Next Status
-    const fetchNextStatus = (statusID) => {
-        return axios.get(API_URL + "tickets/status?following="+statusID);
+    const fetchNextStatus = ({queryKey}) => {
+        let statusId = queryKey[1];
+        return axios.get(API_URL + "tickets/status?following=" + statusId);
     }
-    const {data: waitlist, refetch: refecthWaitList, isLoading} = useQuery(["waitlist", pagination.current, pagination.pageSize], () => fetchWaitlist(pagination.current, pagination.pageSize), {
+    const {data: waitlist,isLoading} = useQuery(["waitlist", pagination.current, pagination.pageSize, defaultAgency], () => fetchWaitlist(pagination.current-1, pagination.pageSize), {
         onSuccess: (data) => {
             setFilteredData(data?.data.content);
             setPagination({
@@ -133,15 +161,19 @@ function WaitList() {
         },
         keepPreviousData: true
     })
+
+    const {data: followingStatus} = useQuery(["following_statuses", currentSelectedStatus], fetchNextStatus, {
+        enabled: currentSelectedStatus !== "" ? true : false,
+        onSuccess: (data) => {
+        }
+    })
+
     const {data: users} = useQuery("userlist", fetchUser, {enabled: false})
     const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgency)
 
     useEffect(() => {
         setFilteredUserData(users?.data.content);
     }, [users]);
-    useEffect(() => {
-        refecthWaitList();
-    }, [defaultAgency])
 
     //functions
     const onSelectChange = (newSelectedRowKeys) => {
@@ -157,6 +189,29 @@ function WaitList() {
         selectedRowKeys.forEach((ticketId) => {
             markedAsResolvedOrClosed({ticketId: ticketId, status: action})
         })
+    }
+    const handleExportTicket = (type) => {
+        if (type === 'EXCEL') {
+            let datas = filteredData.filter((data) => selectedRowKeys.includes(data.id));
+            let wb = utilsXLXS.book_new();
+            let ws = utilsXLXS.json_to_sheet(datas.map((data) => {
+                return {
+                    Titre: data.title,
+                    Description: data.description,
+                    Emetteur: data.reporter,
+                    'Attribuer à': data.assigned_to,
+                    Status: data.status.statusLabel,
+                    Departement: data.department,
+                    'Priorité': data.priority.priorityLabel,
+                    'Catégorie': data.category.name,
+                    'Émis le': moment(data.createdAt).format('MM-DD-YYYY'),
+                };
+            }));
+            utilsXLXS.book_append_sheet(wb, ws, "Classeur 1");
+            writeFile(wb, "Listes des Tickets.xlsx");
+        } else {
+
+        }
     }
     //Filter users in table
     const onSearchUser = (value) => {
@@ -244,12 +299,13 @@ function WaitList() {
                     <Select defaultValue={status.statusLabel} style={{width: "98px"}}
                             onChange={(status) => {
                                 updateState({id: record.id, status: status})
-                            }}>
-                        <Option value={status.statusId}>{status.statusLabel}</Option>{/*
-                        <Option value="Assigné">Assigné</Option>
-                        <Option value="En cours">En cours</Option>
-                        <Option value="Résolu">Résolu</Option>
-                        <Option value="Fermé">Fermé</Option>*/}
+                            }} onClick={()=>{setCurrentSelectedStatus(status.statusId)}}>
+                        <Option value={status.statusId}>{status.statusLabel}</Option>
+                        {
+                            followingStatus?.data?.map((fstatus) =>
+                                (<Option key={fstatus.status.statusId} value={fstatus.status.statusId}>{fstatus.status.statusLabel}</Option>)
+                            )
+                        }
                     </Select>
                 )
             },
@@ -305,11 +361,12 @@ function WaitList() {
             title: 'Émis le',
             dataIndex: 'created_at',
             key: 'created_at',
-            render: (created_at) => moment(created_at).fromNow()
+            render: (createdAt, record) => moment(record.createdAt).fromNow()
         }
     ];
     // Search In table
     const onSearch = (value) => {
+        setSelectedRowKeys([]);
         if (value !== '') {
             setFilteredData(waitlist?.data.content.filter((data) => data.title.toLowerCase().includes(value.toLowerCase()) || data.description.toLowerCase().includes(value.toLowerCase())))
         } else {
@@ -370,6 +427,9 @@ function WaitList() {
                     résolu</Button>
                 <Button onClick={() => markSelectedAsSolvedOrClosed("Fermé")} icon={<LockOutlined/>}>Fermer les
                     tickets</Button>
+                <Dropdown overlay={MenusExport(handleExportTicket)} trigger={['click']} overlayStyle={{ width: 70}}>
+                    <Button icon={<DownloadOutlined />}></Button>
+                </Dropdown>
             </Space> : ''}
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}
                           style={{width: 300, marginBottom: 20}}/>
@@ -379,8 +439,8 @@ function WaitList() {
                     ...pagination, showSizeChanger: true, onChange: (page, pageSize) => {
                         setPagination({current: page, pageSize: pageSize})
                     }
-                }}
-                columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id"
+        }}
+         columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id"
                 dataSource={filteredData} className="all-tickets_table" scroll={{x: "true"}}/> : <CustomLoader/>}
 
         </>
