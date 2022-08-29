@@ -172,7 +172,7 @@ function WaitList() {
         enabled: currentSelectedStatus !== ""
     })
 
-    const {data: users} = useQuery(["userlist", defaultAgency], () => fetchUser);
+    const {data: users} = useQuery(["userlist", defaultAgency], fetchUser);
     const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgency);
 
     useEffect(() => {
