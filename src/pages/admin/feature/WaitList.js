@@ -30,6 +30,7 @@ const {Option} = Select;
 const EditableContext = React.createContext(null);
 
 //Functions
+//Editable Row component
 const EditableRow = ({index, ...props}) => {
     const [form] = Form.useForm();
     return (
@@ -41,6 +42,7 @@ const EditableRow = ({index, ...props}) => {
     );
 };
 
+//Editable Cell component
 const EditableCell = ({title, editable, children, dataIndex, record, handleSave, components, type, ...restProps}) => {
     const [editing, setEditing] = useState(false);
     const inputRef = useRef(null);
@@ -104,13 +106,10 @@ const EditableCell = ({title, editable, children, dataIndex, record, handleSave,
     return <td {...restProps}>{childNode}</td>;
 };
 
+//Dropdown export options
 const MenusExport = (handleExportTicket) => (
     <Menu
         items={[
-            {
-                label: <a title='PDF' onClick={() => handleExportTicket("PDF")}>PDF</a>,
-                key: 'pdf',
-            },
             {
                 label: <a title='EXCEL' onClick={() => handleExportTicket("EXCEL")}>EXCEL</a>,
                 key: 'excel',
@@ -119,6 +118,27 @@ const MenusExport = (handleExportTicket) => (
     />
 );
 
+//List WaitList
+const fetchWaitlist = (page, pageSize, defaultAgency) => {
+    return axios.get(API_URL + `tickets/waitlist?page=${page}&pageSize=${pageSize}&source=` + defaultAgency)
+}
+//List user
+const fetchUser = ({queryKey}) => {
+    let defaultAgency = queryKey[1];
+    return axios.get(API_USER_URL + "users/admin?agency=" + defaultAgency)
+}
+//List Agency
+const fetchAgency = () => {
+    return axios.get(API_USER_URL + "users/agencies")
+}
+//List Next Status
+const fetchNextStatus = ({queryKey}) => {
+    let statusId = queryKey[1];
+    return axios.get(API_URL + "tickets/status?following=" + statusId);
+}
+
+
+//Waitlist component
 function WaitList() {
     //hooks
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -126,40 +146,38 @@ function WaitList() {
     const {mutate: updateState} = useUpdateStatus();
     let [filteredData, setFilteredData] = useState([]);
     let [filteredUserData, setFilteredUserData] = useState([]);
+    let [currentSelectedStatus, setCurrentSelectedStatus] = useState("");
     let {auth} = useAuth();
     let [defaultAgency, setDefaultAgency] = useState(auth.agency);
-    const tableRef = useRef(null);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+    });
 
-    //List WaitList
-    const fetchWaitlist = () => {
-        return axios.get(API_URL + "tickets/waitlist?page=1&pageSize=10&source=" + defaultAgency)
-    }
-    //List user
-    const fetchUser = () => {
-        return axios.get(API_USER_URL + "users")
-    }
-    //List Agency
-    const fetchAgency = () => {
-        return axios.get(API_USER_URL + "users/agencies")
-    }
-    //List Next Status
-    const fetchNextStatus = (statusID) => {
-        return axios.get(API_URL + "tickets/status?following=" + statusID);
-    }
-    const {data: waitlist, refetch: refecthWaitList, isLoading} = useQuery("waitlist", fetchWaitlist)
-    const {data: users} = useQuery("userlist", fetchUser, {enabled: false})
-    const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgency)
+    const {
+        data: waitlist,
+        isLoading
+    } = useQuery(["waitlist", pagination.current, pagination.pageSize, defaultAgency], () => fetchWaitlist(pagination.current - 1, pagination.pageSize, defaultAgency), {
+        onSuccess: (data) => {
+            setFilteredData(data?.data.content);
+            setPagination({
+                ...pagination, total: data?.data.totalElements
+            });
 
-    useEffect(() => {
-        setFilteredData(waitlist?.data.content);
-    }, [waitlist]);
+        },
+        keepPreviousData: true
+    })
+
+    const {data: followingStatus} = useQuery(["following_statuses", currentSelectedStatus], fetchNextStatus, {
+        enabled: currentSelectedStatus !== ""
+    })
+
+    const {data: users} = useQuery(["userlist", defaultAgency], () => fetchUser);
+    const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgency);
+
     useEffect(() => {
         setFilteredUserData(users?.data.content);
     }, [users]);
-    useEffect(() => {
-        refecthWaitList().then(() => {
-        });
-    }, [defaultAgency])
 
     //functions
     const onSelectChange = (newSelectedRowKeys) => {
@@ -253,7 +271,7 @@ function WaitList() {
                         onSearch={onSearchUser}
                         placeholder="Rechercher les utilisateurs" ref={ref}
                     >
-                        {filteredUserData.map((user, key) => (
+                        {filteredUserData?.map((user, key) => (
                             <Option key={user.username + key} value={user.username}>
                                 {user.username}
                             </Option>
@@ -285,12 +303,16 @@ function WaitList() {
                     <Select defaultValue={status.statusLabel} style={{width: "98px"}}
                             onChange={(status) => {
                                 updateState({id: record.id, status: status})
-                            }}>
-                        <Option value={status.statusId}>{status.statusLabel}</Option>{/*
-                        <Option value="Assigné">Assigné</Option>
-                        <Option value="En cours">En cours</Option>
-                        <Option value="Résolu">Résolu</Option>
-                        <Option value="Fermé">Fermé</Option>*/}
+                            }} onClick={() => {
+                        setCurrentSelectedStatus(status.statusId)
+                    }}>
+                        <Option value={status.statusId}>{status.statusLabel}</Option>
+                        {
+                            followingStatus?.data?.map((fstatus) =>
+                                (<Option key={fstatus.status.statusId}
+                                         value={fstatus.status.statusId}>{fstatus.status.statusLabel}</Option>)
+                            )
+                        }
                     </Select>
                 )
             },
@@ -392,7 +414,6 @@ function WaitList() {
         };
     });
 
-    if (isLoading) return (<CustomLoader/>)
     return (
         <>
             <PageHeader
@@ -413,17 +434,21 @@ function WaitList() {
                     résolu</Button>
                 <Button onClick={() => markSelectedAsSolvedOrClosed("Fermé")} icon={<LockOutlined/>}>Fermer les
                     tickets</Button>
-                <Dropdown overlay={MenusExport(handleExportTicket)} trigger={['click']} overlayStyle={{ width: 70}}>
-                    <Button icon={<DownloadOutlined />}></Button>
+                <Dropdown overlay={MenusExport(handleExportTicket)} trigger={['click']} overlayStyle={{width: 70}}>
+                    <Button icon={<DownloadOutlined/>}></Button>
                 </Dropdown>
             </Space> : ''}
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}
                           style={{width: 300, marginBottom: 20}}/>
-            <Table
-                ref={tableRef}
-                components={components}  //Add new Custom Cell and Row
+            {!isLoading ? <Table
+                components={components}//Add new Custom Cell and Row
+                pagination={{
+                    ...pagination, showSizeChanger: true, onChange: (page, pageSize) => {
+                        setPagination({current: page, pageSize: pageSize})
+                    }
+                }}
                 columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id"
-                dataSource={filteredData} className="all-tickets_table" scroll={{x: "true"}}/>
+                dataSource={filteredData} className="all-tickets_table" scroll={{x: "true"}}/> : <CustomLoader/>}
 
         </>
     )

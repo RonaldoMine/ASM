@@ -1,5 +1,6 @@
 import React from "react";
 import {Avatar, Typography} from "antd";
+import {GET_ROUTE_WITH_ROLE} from "../../../../global/utils";
 
 
 const {Title} = Typography;
@@ -33,7 +34,9 @@ export const profileMenu = (auth, signOut, navigate) => [
         key: '1',
     },
     {
-        label: <Title level={4}>Mon compte</Title>,
+        label: <Title level={4} onClick={() => {
+            navigate(`/${GET_ROUTE_WITH_ROLE(auth.role)}/settings/account`, {replace: true});
+        }}>Mon compte</Title>,
         key: '2',
     },
     {
