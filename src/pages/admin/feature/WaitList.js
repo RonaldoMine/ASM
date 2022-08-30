@@ -111,7 +111,7 @@ const MenusExport = (handleExportTicket) => (
     <Menu
         items={[
             {
-                label: <a title='EXCEL' onClick={() => handleExportTicket("EXCEL")}>EXCEL</a>,
+                label: <span onClick={() => handleExportTicket("EXCEL")}>EXCEL</span>,
                 key: 'excel',
             },
         ]}

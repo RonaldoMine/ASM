@@ -1,5 +1,5 @@
 //imports
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Avatar, Button, Form, Input, Layout, message, Modal, Select, Space, TreeSelect } from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
@@ -36,26 +36,25 @@ const NavBar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
     const [categoryTreeValue, setcategoryTreeValue] = useState();
-    const [expandedKeys, setExpandedKeys] = useState([])
     const [treeSelectOpen, setTreeSelectOpen] = useState(false)
     const { mutate: addTicket } = useAddTickets();
     const { auth, signOut } = useAuth();
     const navigate = useNavigate();
     const [treeData, setTreeData] = useState([]);
 
-    const {data: categories} = useQuery("categorieslist", fetchCategories, {
+    useQuery("categorieslist", fetchCategories, {
         onSuccess: (data) => {
             setTreeData(data?.data.map((category) => genTreeNode(category)))
         }
     })
 
     // useQuery(["categories_sublist"], fetchSubCategories, {
-    //     enabled: false
+    //     enabled: false 
     // })
 
 const checkSubTree = (id) => {
     let matches = [];
-    matches = treeData.filter((value) => value.pId == id)
+    matches = treeData.filter((value) => value.pId === id)
 
     return matches.length > 0
 }
@@ -90,7 +89,7 @@ const checkSubTree = (id) => {
         form.validateFields()
             .then(value => {
 
-                addTicket({ ...value, category: value.category.toString(), priority: 0, source: auth.agency });
+                addTicket({ ...value, category: value.category.toString(), source: auth.agency });
                 form.resetFields()
                 setIsOpen(false);
                 setConfirmLoading(false);
@@ -177,8 +176,7 @@ const checkSubTree = (id) => {
                     <Form.Item
                         label="Émetteur"
                         name="reporter"
-
-                        initialValue={"Yvan Dipoko"}
+                        initialValue={auth.username}
                     >
                         <Input disabled />
                     </Form.Item>
@@ -186,22 +184,15 @@ const checkSubTree = (id) => {
                     <Form.Item
                         label="Attribuer à"
                         name="assigned_to"
-                        initialValue={"pierre_marie"}
+                        initialValue={"Non attribué"}
                     >
-                        <Select>
-                            <Option value="Auto-assign">
-                                Auto-assign
-                            </Option>
-                            <Option value="Agent1">
-                                Agent1
-                            </Option>
-                        </Select>
+                        <Input disabled />
                     </Form.Item>
 
                     <Form.Item
                         label="Statut"
                         name="status"
-                        initialValue={0}
+                        initialValue={"Nouveau"}
                     >
                         <Input disabled />
                     </Form.Item>
@@ -209,7 +200,7 @@ const checkSubTree = (id) => {
                     <Form.Item
                         label="Département"
                         name="department"
-                        initialValue={"DSI"}
+                        initialValue={auth.department}
                     >
                         <Input disabled />
                     </Form.Item>
@@ -226,10 +217,10 @@ const checkSubTree = (id) => {
                             <Option value="1">
                                 Moyen
                             </Option>
-                            <Option value="3">
+                            <Option value="2">
                                 Important
                             </Option>
-                            <Option value="4">
+                            <Option value="3">
                                 Urgent
                             </Option>
                         </Select>
@@ -238,6 +229,7 @@ const checkSubTree = (id) => {
                     <Form.Item
                         label="Catégorie"
                         name="category"
+                        rules={[{ required: true, message: 'Choisir une catégorie!' }]}
                     >
                         <TreeSelect
                             treeDataSimpleMode
@@ -248,7 +240,6 @@ const checkSubTree = (id) => {
                             onChange={onChange}
                             loadData={onLoadData}
                             treeData={treeData}
-                            onTreeLoad={(expanded) => setExpandedKeys(expanded)}
                             onDropdownVisibleChange={(open) => setTreeSelectOpen(open)}
                         />
                     </Form.Item>

@@ -3,7 +3,7 @@ import axios from 'axios'
 import {API_URL} from "../../../../global/axios";
 
 const updateStatus = (elt) => {
-    return axios.patch(API_URL+`tickets/${elt.id}`, { status: elt.status })
+    return axios.patch(API_URL+`tickets/status/update?ticketId=${elt.id}&statusId=${elt.status}`)
 }
 
 export const useUpdateStatus = () => {
