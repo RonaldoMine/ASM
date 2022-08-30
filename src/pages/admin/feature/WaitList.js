@@ -163,7 +163,7 @@ function WaitList() {
     })
 
     const {data: followingStatus} = useQuery(["following_statuses", currentSelectedStatus], fetchNextStatus, {
-        enabled: currentSelectedStatus !== "" ? true : false,
+        enabled: currentSelectedStatus !== "",
         onSuccess: (data) => {
         }
     })

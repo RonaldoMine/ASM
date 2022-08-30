@@ -1,5 +1,5 @@
 //imports
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Avatar, Button, Form, Input, Layout, message, Modal, Select, Space, TreeSelect } from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
@@ -43,7 +43,7 @@ const NavBar = () => {
     const navigate = useNavigate();
     const [treeData, setTreeData] = useState([]);
 
-    useQuery("categorieslist", fetchCategories, {
+    const {data: categories} = useQuery("categorieslist", fetchCategories, {
         onSuccess: (data) => {
             setTreeData(data?.data.map((category) => genTreeNode(category)))
         }
@@ -52,6 +52,14 @@ const NavBar = () => {
     // useQuery(["categories_sublist"], fetchSubCategories, {
     //     enabled: false
     // })
+
+const checkSubTree = (id) => {
+    let matches = [];
+    matches = treeData.filter((value) => value.pId == id)
+
+    return matches.length > 0
+}
+    
 
     const handleCancel = () => {
         if (form.isFieldsTouched(["title", "description"])) {
@@ -108,7 +116,7 @@ const NavBar = () => {
 
     const onLoadData = ({ id }) =>
         new Promise((resolve) => {
-            if (treeSelectOpen && !expandedKeys.includes(id)) {
+            if(treeSelectOpen && !checkSubTree(id)){
                 fetch(API_URL + "tickets/categories/" + id + "/subcategories").then(
                     res => res.json()
                 ).then(
@@ -122,18 +130,11 @@ const NavBar = () => {
                     }
                 )
             }
-            else{
-                resolve()
-            }
+                else{
+                    resolve();
+                }
 
         });
-    // 
-
-    //     // setTreeData(
-    //     //     treeData.concat([genTreeNode(id, false), genTreeNode(id, true), genTreeNode(id, true)]),
-    //     // );
-    //     // resolve(undefined);
-    // 
 
     return (
         <Header className="header-container" /*style={{ position: 'fixed', zIndex: 1, width: '100%' }}*/>
