@@ -106,6 +106,7 @@ const EditableCell = ({title, editable, children, dataIndex, record, handleSave,
     return <td {...restProps}>{childNode}</td>;
 };
 
+//Dropdown export options
 const MenusExport = (handleExportTicket) => (
     <Menu
         items={[
@@ -116,6 +117,25 @@ const MenusExport = (handleExportTicket) => (
         ]}
     />
 );
+
+//List WaitList
+const fetchWaitlist = (page, pageSize, defaultAgency) => {
+    return axios.get(API_URL + `tickets/waitlist?page=${page}&pageSize=${pageSize}&source=` + defaultAgency)
+}
+//List user
+const fetchUser = ({queryKey}) => {
+    let defaultAgency = queryKey[1];
+    return axios.get(API_USER_URL + "users/admin?agency=" + defaultAgency)
+}
+//List Agency
+const fetchAgency = () => {
+    return axios.get(API_USER_URL + "users/agencies")
+}
+//List Next Status
+const fetchNextStatus = ({queryKey}) => {
+    let statusId = queryKey[1];
+    return axios.get(API_URL + "tickets/status?following=" + statusId);
+}
 
 
 //Waitlist component
@@ -134,42 +154,26 @@ function WaitList() {
         pageSize: 10,
     });
 
-    //List WaitList
-    const fetchWaitlist = (page, pageSize) => {
-        return axios.get(API_URL + `tickets/waitlist?page=${page}&pageSize=${pageSize}&source=` + defaultAgency)
-    }
-    //List user
-    const fetchUser = () => {
-        return axios.get(API_USER_URL + "users")
-    }
-    //List Agency
-    const fetchAgency = () => {
-        return axios.get(API_USER_URL + "users/agencies")
-    }
-    //List Next Status
-    const fetchNextStatus = ({queryKey}) => {
-        let statusId = queryKey[1];
-        return axios.get(API_URL + "tickets/status?following=" + statusId);
-    }
-    const {data: waitlist,isLoading} = useQuery(["waitlist", pagination.current, pagination.pageSize, defaultAgency], () => fetchWaitlist(pagination.current-1, pagination.pageSize), {
+    const {
+        data: waitlist,
+        isLoading
+    } = useQuery(["waitlist", pagination.current, pagination.pageSize, defaultAgency], () => fetchWaitlist(pagination.current - 1, pagination.pageSize, defaultAgency), {
         onSuccess: (data) => {
             setFilteredData(data?.data.content);
             setPagination({
                 ...pagination, total: data?.data.totalElements
             });
-            
+
         },
         keepPreviousData: true
     })
 
     const {data: followingStatus} = useQuery(["following_statuses", currentSelectedStatus], fetchNextStatus, {
-        enabled: currentSelectedStatus !== "",
-        onSuccess: (data) => {
-        }
+        enabled: currentSelectedStatus !== ""
     })
 
-    const {data: users} = useQuery("userlist", fetchUser, {enabled: false})
-    const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgency)
+    const {data: users} = useQuery(["userlist", defaultAgency], fetchUser);
+    const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgency);
 
     useEffect(() => {
         setFilteredUserData(users?.data.content);
@@ -267,7 +271,7 @@ function WaitList() {
                         onSearch={onSearchUser}
                         placeholder="Rechercher les utilisateurs" ref={ref}
                     >
-                        {filteredUserData.map((user, key) => (
+                        {filteredUserData?.map((user, key) => (
                             <Option key={user.username + key} value={user.username}>
                                 {user.username}
                             </Option>
@@ -299,11 +303,14 @@ function WaitList() {
                     <Select defaultValue={status.statusLabel} style={{width: "98px"}}
                             onChange={(status) => {
                                 updateState({id: record.id, status: status})
-                            }} onClick={()=>{setCurrentSelectedStatus(status.statusId)}}>
+                            }} onClick={() => {
+                        setCurrentSelectedStatus(status.statusId)
+                    }}>
                         <Option value={status.statusId}>{status.statusLabel}</Option>
                         {
                             followingStatus?.data?.map((fstatus) =>
-                                (<Option key={fstatus.status.statusId} value={fstatus.status.statusId}>{fstatus.status.statusLabel}</Option>)
+                                (<Option key={fstatus.status.statusId}
+                                         value={fstatus.status.statusId}>{fstatus.status.statusLabel}</Option>)
                             )
                         }
                     </Select>
@@ -427,8 +434,8 @@ function WaitList() {
                     résolu</Button>
                 <Button onClick={() => markSelectedAsSolvedOrClosed("Fermé")} icon={<LockOutlined/>}>Fermer les
                     tickets</Button>
-                <Dropdown overlay={MenusExport(handleExportTicket)} trigger={['click']} overlayStyle={{ width: 70}}>
-                    <Button icon={<DownloadOutlined />}></Button>
+                <Dropdown overlay={MenusExport(handleExportTicket)} trigger={['click']} overlayStyle={{width: 70}}>
+                    <Button icon={<DownloadOutlined/>}></Button>
                 </Dropdown>
             </Space> : ''}
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}
@@ -439,8 +446,8 @@ function WaitList() {
                     ...pagination, showSizeChanger: true, onChange: (page, pageSize) => {
                         setPagination({current: page, pageSize: pageSize})
                     }
-        }}
-         columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id"
+                }}
+                columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id"
                 dataSource={filteredData} className="all-tickets_table" scroll={{x: "true"}}/> : <CustomLoader/>}
 
         </>

@@ -15,6 +15,7 @@ import {
     UserOutlined
 } from '@ant-design/icons';
 import {ROLE_ADMIN, ROLE_AGENT, ROLE_SUPER_ADMIN} from "../../../../global/roles";
+import {GET_ROUTE_WITH_ROLE} from "../../../../global/utils";
 
 const dashboardMenu = (role) => {
     if (role !== ROLE_AGENT) {
@@ -37,7 +38,7 @@ const settingMenu = (role) => {
     let data = [
         {
             title: 'Mon Compte',
-            path: '/admin/settings/account',
+            path: `/${GET_ROUTE_WITH_ROLE(role)}/settings/account`,
             icon: <UserOutlined/>
         }
     ];
@@ -45,7 +46,7 @@ const settingMenu = (role) => {
         data.push(
             {
                 title: 'Catégories',
-                path: '/admin/settings/categories',
+                path: `/${GET_ROUTE_WITH_ROLE(role)}/settings/categories`,
                 icon: <BarsOutlined/>
             }
         );
@@ -54,7 +55,7 @@ const settingMenu = (role) => {
         data.push(
             {
                 title: 'Administration',
-                path: '/admin/settings/agencies',
+                path: `/${GET_ROUTE_WITH_ROLE(role)}/settings/agencies`,
                 icon: <ControlOutlined/>
             }
         )
@@ -69,12 +70,12 @@ export const SideBarData = (auth) => [
         subnav: [
             {
                 title: auth.role === ROLE_AGENT ? 'Mes Tickets' : 'Tickets',
-                path: '/admin/general/tickets',
+                path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/general/tickets`,
                 icon: <ExclamationCircleOutlined/>,
             },
             {
                 title: auth.role === ROLE_AGENT ? 'Mes Archives' : 'Archives',
-                path: '/admin/general/archives',
+                path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/general/archives`,
                 icon: <FolderOutlined/>
             }
 
@@ -87,17 +88,17 @@ export const SideBarData = (auth) => [
         subnav: [
             {
                 title: 'Base de connaissance',
-                path: '/admin/info/knowledge_base',
+                path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/info/knowledge_base`,
                 icon: <ReadOutlined/>
             },
             {
                 title: auth.role === ROLE_AGENT ? 'Mes suggestions' : 'Suggestions',
-                path: '/admin/info/suggestions',
+                path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/info/suggestions`,
                 icon: <ContainerOutlined/>
             },
             {
                 title: 'Aide',
-                path: '/admin/info/help',
+                path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/info/help`,
                 icon: <QuestionOutlined/>
             }
 
