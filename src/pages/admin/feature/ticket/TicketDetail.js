@@ -30,9 +30,10 @@ import {useQuery} from "react-query";
 import {useEditTicketTitleAndDescription} from "../hooks/useEditTicketTitleAndDescription";
 import {useUpdateStatus} from "../hooks/useUpdateStatus";
 import CustomLoader from "../../components/custom/CustomLoader";
-import {useAddComment} from "../hooks/useAddComment";
+import {useAddComments} from "../hooks/useAddComments";
 import {API_URL} from "../../../../global/axios";
 import moment from "moment";
+import useAuth from "../../../../auth/hook/useAuth";
 
 const { Panel } = Collapse;
 const { TextArea } = Input;
@@ -49,8 +50,9 @@ function TicketDetail() {
 
     const { data: ticket, isLoading } = useGetTicketData(ticketId);//get ticket data
     const { mutate: editTitleandDescription } = useEditTicketTitleAndDescription();//edit ticket title and description
-    const { mutate: addComment } = useAddComment();//add comment
+    const { mutate: addComments } = useAddComments();//add comment
     const { mutate: editStatus } = useEditStatus();//add status
+    const { auth } = useAuth(); // Get Auth
 
 
     //fetch ticket comments
@@ -120,8 +122,8 @@ function TicketDetail() {
         if (!comment) return;
         setSubmitting(true);
         setComment('');
-        let data = { ticket_id: ticketId, content: comment, author: 'John Doe', created_at: Date.now() }
-        addComment(data);
+        let data = { ticket_id: ticketId, comment: {content: comment, author: auth.username} }
+        addComments(data);
         setSubmitting(false);
     };
 
