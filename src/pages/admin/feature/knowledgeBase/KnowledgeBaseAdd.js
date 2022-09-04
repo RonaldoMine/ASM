@@ -1,33 +1,34 @@
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import KnowledgeBaseForm from "./KnowledgeBaseForm";
-import {Button, Form, PageHeader} from "antd";
-import {LeftOutlined} from "@ant-design/icons";
-import { useAddArticle } from "../hooks/useAddArticle";
+import {Form, message, PageHeader} from "antd";
+import {useAddArticle} from "../hooks/useAddArticle";
+import useAuth from "../../../../auth/hook/useAuth";
 
 function KnowledgeBaseAdd() {
     // Hooks
     const [form] = Form.useForm();
     let navigate = useNavigate();
-
-    const {mutate: addArticle} = useAddArticle();
-
-    //Functions
-    const back = () => {
-        navigate(-1)
-    }
+    let {knowledgeBaseId} = useParams();
+    const {mutate: addArticle} = useAddArticle(knowledgeBaseId);
+    const { auth } = useAuth();
 
     const submitForm = (fields) => {
         let {title, description, category} = fields;
-
-        // console.log(title);
-        // console.log(category);
-        // console.log(description.toHTML());
-
-        addArticle({title: title, category: category, content: description.toHTML(), knowledgeBase_id: "2", number_of_views: 0});
+        addArticle({
+            article: {
+                title: title,
+                categoryId: category,
+                content: description.toHTML(),
+                creator: auth.username
+            },
+            kbId: knowledgeBaseId
+        });
+        message.success(`Article ajouté`);
+        navigate(-1)
     }
     return (
         <>
-            <PageHeader title="Création d'un article" extra={[<Button key="back" type="link" onClick={back} icon={<LeftOutlined/>}> Retour</Button>]}/>
+            <PageHeader title="Création d'un article" onBack={() => navigate(-1)}/>
             <Form
                 name="edit_knowledge"
                 layout='vertical'
@@ -35,7 +36,7 @@ function KnowledgeBaseAdd() {
                 form={form}
                 onFinish={submitForm}
             >
-                <KnowledgeBaseForm form={form} />
+                <KnowledgeBaseForm form={form}/>
             </Form>
         </>
     );

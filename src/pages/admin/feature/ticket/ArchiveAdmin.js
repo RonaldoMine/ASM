@@ -8,6 +8,7 @@ import useAuth from "../../../../auth/hook/useAuth";
 import React, {useEffect, useState} from "react";
 import CustomLoader from "../../components/custom/CustomLoader";
 import moment from "moment";
+import {GET_ROUTE_WITH_ROLE} from "../../../../global/utils";
 
 function ArchiveAdmin() {
     // Hooks
@@ -52,7 +53,7 @@ function ArchiveAdmin() {
             dataIndex: 'title',
             key: 'title',
             render: (text, record) => record.status !== "Fermé" ?
-                <Link to={`/admin/ticket/${record.id}`}>{text}</Link> : <p>{text}</p>
+                <Link to={`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/tickets/${record.id}`}>{text}</Link> : <p>{text}</p>
         },
         {
             title: 'Description',

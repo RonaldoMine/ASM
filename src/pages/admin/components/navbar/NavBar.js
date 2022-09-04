@@ -88,7 +88,6 @@ const checkSubTree = (id) => {
         setConfirmLoading(true);
         form.validateFields()
             .then(value => {
-
                 addTicket({ ...value, category: value.category.toString(), source: auth.agency });
                 form.resetFields()
                 setIsOpen(false);

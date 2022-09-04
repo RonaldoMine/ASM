@@ -17,8 +17,6 @@ function Login() {
 
     const [form] = Form.useForm()
 
-    const from = location.state?.from?.pathname || `/`;
-
     //Hooks
     const onFinish = async () => {
 

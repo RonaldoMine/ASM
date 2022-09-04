@@ -26,7 +26,7 @@ const dashboardMenu = (role) => {
             subnav: [
                 {
                     title: 'Statistiques',
-                    path: '/admin/dashboard/stats',
+                    path: `/${GET_ROUTE_WITH_ROLE(role)}/dashboard/stats`,
                     icon: <LineChartOutlined/>
                 }
             ],

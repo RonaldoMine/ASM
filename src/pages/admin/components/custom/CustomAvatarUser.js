@@ -5,7 +5,7 @@ function CustomAvatarUser({value, color = "#cccccc"}) {
     return (
         <>
             <div style={{display: "flex", alignItems: "center"}}>
-                <Avatar style={{ marginRight: 7, background: color}}>{value[0]}</Avatar> {value}
+                <Avatar style={{ marginRight: 7, background: color}}>{value[0].toUpperCase()}</Avatar> {value}
             </div>
         </>
     )

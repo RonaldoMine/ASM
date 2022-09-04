@@ -3,8 +3,6 @@ import {Route, Routes} from 'react-router-dom';
 import {QueryClient, QueryClientProvider} from 'react-query';
 import Login from './auth/login/Login';
 import Admin from './pages/admin';
-import Agent from './pages/agent';
-import AgentTickets from './pages/agent/feature/AgentTickets';
 import KnowledgeBaseList from "./pages/admin/feature/knowledgeBase/KnowledgeBaseList";
 import KnowledgeBaseDetail from "./pages/admin/feature/knowledgeBase/KnowledgeBaseDetail";
 import KnowledgeBaseEdit from "./pages/admin/feature/knowledgeBase/KnowledgeBaseEdit";
@@ -19,6 +17,7 @@ import RequireAuth from "./auth/component/RequireAuth";
 import {ROLE_ADMIN, ROLE_AGENT, ROLE_SUPER_ADMIN} from "./global/roles";
 import Unauthorized from "./auth/unauthorized/Unauthorized";
 import Account from "./pages/admin/feature/account/Account";
+import ManageRoute from "./auth/component/ManageRoute";
 
 const qc = new QueryClient();
 
@@ -41,9 +40,11 @@ function App() {
                         <Route path="info">
                             <Route path='knowledge_base'>
                                 <Route index element={<KnowledgeBaseList/>}/>
-                                <Route path="create" element={<KnowledgeBaseAdd/>}/>
+                                <Route element={<RequireAuth allowedRoles={[ROLE_SUPER_ADMIN, ROLE_ADMIN]}/>}>
+                                    <Route path="create/:knowledgeBaseId" element={<KnowledgeBaseAdd/>}/>
+                                    <Route path="edit/:articleId" element={<KnowledgeBaseEdit/>}/>
+                                </Route>
                                 <Route path="detail/:articleId" element={<KnowledgeBaseDetail/>}/>
-                                <Route path="edit/:articleId" element={<KnowledgeBaseEdit/>}/>
                             </Route>
                             <Route path="suggestions" element={<Suggestion/>}/>
                         </Route>
@@ -55,10 +56,7 @@ function App() {
                         </Route>
                     </Route>
                 </Route>
-               {/* <Route path="/agent" element={<Agent/>}>
-                    <Route index element={<AgentTickets/>}/>
-                </Route>*/}
-                <Route path="*" element={<Missing/>}/>
+                <Route path="*" element={<ManageRoute/>}/>
                 <Route path="/unauthorized" element={<Unauthorized/>}/>
             </Routes>
         </QueryClientProvider>

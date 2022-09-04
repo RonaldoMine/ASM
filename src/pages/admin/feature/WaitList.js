@@ -5,6 +5,7 @@ import {
     Form,
     Input,
     Menu,
+    message,
     PageHeader,
     Select,
     Space,
@@ -18,13 +19,15 @@ import axios from 'axios'
 import {useUpdateStatus} from './hooks/useUpdateStatus';
 import {CheckOutlined, DownloadOutlined, LockOutlined} from "@ant-design/icons";
 import './TableSharedStyle.css'
-import {useResolveSelectedTickets} from './hooks/useResolveSelectedTickets';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import CustomLoader from '../components/custom/CustomLoader';
 import useAuth from "../../../auth/hook/useAuth";
 import {API_URL, API_USER_URL} from "../../../global/axios";
 import moment from "moment/moment";
 import {utils as utilsXLXS, writeFile} from "xlsx";
+import {TICKET_STATUS_CLOSED, TICKET_STATUS_NEW, TICKET_STATUS_SOLVED} from "../../../global/statusTickets";
+import {useAssignTicket} from "./hooks/useAssignTicket";
+import {GET_COLOR_TICKET_STATUS, GET_TCIKET_LABELS} from "../../../global/utils";
 
 const {Option} = Select;
 const EditableContext = React.createContext(null);
@@ -43,7 +46,18 @@ const EditableRow = ({index, ...props}) => {
 };
 
 //Editable Cell component
-const EditableCell = ({title, editable, children, dataIndex, record, handleSave, components, type, ...restProps}) => {
+const EditableCell = ({
+                          title,
+                          editable,
+                          children,
+                          dataIndex,
+                          record,
+                          handleSave,
+                          components,
+                          defaultValue,
+                          type,
+                          ...restProps
+                      }) => {
     const [editing, setEditing] = useState(false);
     const inputRef = useRef(null);
     const form = useContext(EditableContext);
@@ -57,7 +71,7 @@ const EditableCell = ({title, editable, children, dataIndex, record, handleSave,
         setEditing(!editing);
         form.setFieldsValue({
             //[dataIndex]: record[dataIndex]
-            [dataIndex]: ""
+            [dataIndex]: defaultValue && defaultValue(record)
         });
     };
 
@@ -141,18 +155,21 @@ const fetchNextStatus = ({queryKey}) => {
 //Waitlist component
 function WaitList() {
     //hooks
-    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-    const {mutate: markedAsResolvedOrClosed} = useResolveSelectedTickets();
-    const {mutate: updateState} = useUpdateStatus();
-    let [filteredData, setFilteredData] = useState([]);
-    let [filteredUserData, setFilteredUserData] = useState([]);
-    let [currentSelectedStatus, setCurrentSelectedStatus] = useState("");
     let {auth} = useAuth();
-    let [defaultAgency, setDefaultAgency] = useState(auth.agency);
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
     });
+    let [defaultAgency, setDefaultAgency] = useState(auth.agency);
+    const {mutate: updateState} = useUpdateStatus();
+    const {
+        mutate: assignTicket,
+        isLoading: isLoadingAssign
+    } = useAssignTicket(["waitlist", pagination.current, pagination.pageSize, defaultAgency]);
+    let [filteredData, setFilteredData] = useState([]);
+    let [filteredUserData, setFilteredUserData] = useState([]);
+    let [currentSelectedStatus, setCurrentSelectedStatus] = useState("");
 
     const {
         data: waitlist,
@@ -191,8 +208,10 @@ function WaitList() {
     const hasSelected = selectedRowKeys.length > 0;
     const markSelectedAsSolvedOrClosed = (action) => {
         selectedRowKeys.forEach((ticketId) => {
-            markedAsResolvedOrClosed({ticketId: ticketId, status: action})
+            updateState({id: ticketId, status: action})
         })
+        message.success('Tickets mis à jour');
+        setSelectedRowKeys([]);
     }
     const handleExportTicket = (type) => {
         if (type === 'EXCEL') {
@@ -223,6 +242,19 @@ function WaitList() {
             setFilteredUserData(users?.data.filter((user) => user.username.toLowerCase().includes(value.toLowerCase())))
         } else {
             setFilteredUserData(users?.data);
+        }
+    };
+    //Filter users in table
+    const onAssignTicket = (data) => {
+        if (data.value !== data.old_value) {
+            assignTicket(data);
+            message.success(`Ticket assigné à ${data.to}`);
+        }
+    };
+    const onUpdateStatutTicket = (data) => {
+        if (data.status !== data.old_value) {
+            updateState(data);
+            message.success(`Ticket ${data.label}`);
         }
     };
 
@@ -260,29 +292,34 @@ function WaitList() {
                 compare: (a, b) => a.assigned_to.length - b.assigned_to.length,
                 multiple: 2,
             },
-            components: ({onChange, onBlur, ref}) => {
+            components: ({onChange, record, onBlur, ref}) => {
                 return (
                     <AutoComplete
                         style={{
                             width: 200,
                         }}
-                        onSelect={onChange}
+                        onSelect={(value) => {
+                            onChange(value);
+                            onAssignTicket({id: record.id, to: value, old_value: record.assigned_to})
+                        }}
                         onBlur={onBlur}
                         onSearch={onSearchUser}
                         placeholder="Rechercher les utilisateurs" ref={ref}
                     >
-                        {filteredUserData?.map((user, key) => (
+                        {filteredUserData?.map((user, key) => (user.username !== auth.username &&
                             <Option key={user.username + key} value={user.username}>
                                 {user.username}
                             </Option>
                         ))}
                     </AutoComplete>)
             },
+            defaultValue: (record) => record.assigned_to
         },
         {
             title: 'Statut',
             dataIndex: 'status',
             key: 'status',
+            editable: true,
             filters: [
                 {
                     text: 'Nouveau',
@@ -297,16 +334,32 @@ function WaitList() {
                     value: 'En cours',
                 }
             ],
-            onFilter: (value, record) => record.status.statusLabel.indexOf(value) === 0,
-            render: (status, record) => {
+            type: "select",
+            render: (status) => {
+                const typeOfStatus = typeof status;
                 return (
-                    <Select defaultValue={status.statusLabel} style={{width: "98px"}}
-                            onChange={(status) => {
-                                updateState({id: record.id, status: status})
-                            }} onClick={() => {
-                        setCurrentSelectedStatus(status.statusId)
+                    <Tag color={GET_COLOR_TICKET_STATUS(typeOfStatus === 'number' ? status : status.statusId)}
+                         key={status}>
+                        {typeOfStatus === 'number' ? GET_TCIKET_LABELS(typeOfStatus === 'number' ? status : status.statusId) : status.statusLabel.toUpperCase()}
+                    </Tag>
+                );
+            },
+            onFilter: (value, record) => record.status.statusLabel.indexOf(value) === 0,
+            components: ({onChange, record, onBlur, ref}) => {
+                return (
+                    <Select ref={ref} style={{width: "98px"}}
+                            onChange={(status, option) => {
+                                onChange(status);
+                                onUpdateStatutTicket({
+                                    id: record.id,
+                                    status: status,
+                                    old_value: record.status.statusId,
+                                    label: option.children
+                                })
+                            }} onBlur={onBlur} onClick={() => {
+                        setCurrentSelectedStatus(record.status.statusId)
                     }}>
-                        <Option value={status.statusId}>{status.statusLabel}</Option>
+                        <Option value={record.status.statusId}>{record.status.statusLabel}</Option>
                         {
                             followingStatus?.data?.map((fstatus) =>
                                 (<Option key={fstatus.status.statusId}
@@ -316,6 +369,7 @@ function WaitList() {
                     </Select>
                 )
             },
+            defaultValue: (record) => record.status.statusId
         },
         {
             title: 'Departement',
@@ -409,6 +463,7 @@ function WaitList() {
                 title: col.title,
                 components: col.components,
                 type: col.type,
+                defaultValue: col.defaultValue,
                 handleSave,
             }),
         };
@@ -430,9 +485,11 @@ function WaitList() {
                 ]}
             />
             {hasSelected ? <Space style={{marginBottom: 12, display: 'flex', justifyContent: 'end'}}>
-                <Button onClick={() => markSelectedAsSolvedOrClosed("Résolu")} icon={<CheckOutlined/>}>Marquer comme
+                <Button onClick={() => markSelectedAsSolvedOrClosed(TICKET_STATUS_SOLVED)} icon={<CheckOutlined/>}>Marquer
+                    comme
                     résolu</Button>
-                <Button onClick={() => markSelectedAsSolvedOrClosed("Fermé")} icon={<LockOutlined/>}>Fermer les
+                <Button onClick={() => markSelectedAsSolvedOrClosed(TICKET_STATUS_CLOSED)} icon={<LockOutlined/>}>Fermer
+                    les
                     tickets</Button>
                 <Dropdown overlay={MenusExport(handleExportTicket)} trigger={['click']} overlayStyle={{width: 70}}>
                     <Button icon={<DownloadOutlined/>}></Button>
@@ -440,15 +497,17 @@ function WaitList() {
             </Space> : ''}
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}
                           style={{width: 300, marginBottom: 20}}/>
-            {!isLoading ? <Table
-                components={components}//Add new Custom Cell and Row
-                pagination={{
-                    ...pagination, showSizeChanger: true, onChange: (page, pageSize) => {
-                        setPagination({current: page, pageSize: pageSize})
-                    }
-                }}
-                columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection} rowKey="id"
-                dataSource={filteredData} className="all-tickets_table" scroll={{x: "true"}}/> : <CustomLoader/>}
+            {!isLoading ? <Table loading={isLoadingAssign}
+                                 components={components}//Add new Custom Cell and Row
+                                 pagination={{
+                                     ...pagination, showSizeChanger: true, onChange: (page, pageSize) => {
+                                         setPagination({current: page, pageSize: pageSize})
+                                     }
+                                 }}
+                                 columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={rowSelection}
+                                 rowKey="id"
+                                 dataSource={[...filteredData]} className="all-tickets_table" scroll={{x: "true"}}/> :
+                <CustomLoader/>}
 
         </>
     )

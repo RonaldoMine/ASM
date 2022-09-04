@@ -1,18 +1,18 @@
-import { useMutation, useQueryClient } from 'react-query'
+import {useMutation, useQueryClient} from 'react-query'
 import axios from 'axios'
 import {API_URL} from "../../../../global/axios";
 
-const addArticle = (article) => {
-    return axios.post(API_URL+"kb_article", article)
+const addArticle = (datas) => {
+    return axios.post(API_URL + `article?kbId=` + datas.kbId, datas.article)
 }
 
-export const useAddArticle = () => {
+export const useAddArticle = (knowledgeBaseId) => {
 
     const queryClient = useQueryClient();
 
     return useMutation(addArticle, {
         onSuccess: () => {
-            queryClient.invalidateQueries(["articles", "2"]);
+            queryClient.invalidateQueries(["articles", knowledgeBaseId]);
         }
     });
 }
