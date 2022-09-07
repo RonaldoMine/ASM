@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_URL } from "../../../../global/axios";
 import { useQuery } from "react-query";
+import {TICKET_LABEL_UNASSIGNED} from "../../../../global/statusTickets";
 
 //instanciations
 const { Header } = Layout;
@@ -183,7 +184,7 @@ const checkSubTree = (id) => {
                     <Form.Item
                         label="Attribuer à"
                         name="assigned_to"
-                        initialValue={"Non attribué"}
+                        initialValue={TICKET_LABEL_UNASSIGNED}
                     >
                         <Input disabled />
                     </Form.Item>

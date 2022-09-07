@@ -25,7 +25,11 @@ import useAuth from "../../../auth/hook/useAuth";
 import {API_URL, API_USER_URL} from "../../../global/axios";
 import moment from "moment/moment";
 import {utils as utilsXLXS, writeFile} from "xlsx";
-import {TICKET_STATUS_CLOSED, TICKET_STATUS_NEW, TICKET_STATUS_SOLVED} from "../../../global/statusTickets";
+import {
+    TICKET_LABEL_UNASSIGNED,
+    TICKET_STATUS_CLOSED,
+    TICKET_STATUS_SOLVED
+} from "../../../global/statusTickets";
 import {useAssignTicket} from "./hooks/useAssignTicket";
 import {GET_COLOR_TICKET_STATUS, GET_TCIKET_LABELS} from "../../../global/utils";
 
@@ -251,10 +255,16 @@ function WaitList() {
             message.success(`Ticket assigné à ${data.to}`);
         }
     };
-    const onUpdateStatutTicket = (data) => {
-        if (data.status !== data.old_value) {
-            updateState(data);
-            message.success(`Ticket ${data.label}`);
+    const onUpdateStatutTicket = (data, onChange, onBlur) => {
+        if (data.assigned_to === TICKET_LABEL_UNASSIGNED){
+            onBlur();
+            message.warning(`Vous devez d'abord attribué la tâche à un utilisateur`);
+        }else{
+            if (data.status !== data.old_value) {
+                updateState(data);
+                onChange(data.status);
+                message.success(`Ticket ${data.label}`);
+            }
         }
     };
 
@@ -313,7 +323,7 @@ function WaitList() {
                         ))}
                     </AutoComplete>)
             },
-            defaultValue: (record) => record.assigned_to
+            defaultValue: (record) => record.assigned_to !== TICKET_LABEL_UNASSIGNED ? record.assigned_to : ''
         },
         {
             title: 'Statut',
@@ -349,13 +359,13 @@ function WaitList() {
                 return (
                     <Select ref={ref} style={{width: "98px"}}
                             onChange={(status, option) => {
-                                onChange(status);
                                 onUpdateStatutTicket({
                                     id: record.id,
                                     status: status,
                                     old_value: record.status.statusId,
-                                    label: option.children
-                                })
+                                    label: option.children,
+                                    assigned_to: record.assigned_to
+                                }, onChange, onBlur)
                             }} onBlur={onBlur} onClick={() => {
                         setCurrentSelectedStatus(record.status.statusId)
                     }}>
