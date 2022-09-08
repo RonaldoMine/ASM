@@ -335,7 +335,7 @@ function WaitList() {
             title: 'Statut',
             dataIndex: 'status',
             key: 'status',
-            editable: true,
+            editable: auth.role !== ROLE_AGENT,
             filters: [
                 {
                     text: 'Nouveau',
