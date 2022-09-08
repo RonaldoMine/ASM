@@ -9,10 +9,17 @@ import React, {useState} from "react";
 import CustomLoader from "../../components/custom/CustomLoader";
 import moment from "moment";
 import {GET_ROUTE_WITH_ROLE} from "../../../../global/utils";
+import {ROLE_AGENT} from "../../../../global/roles";
 
 //Axios Functions
-const fetchArchive = (page, pageSize, defaultAgency) => {
-    return axios.get(API_URL + `tickets/archive?page=${page}&pageSize=${pageSize}&source=` + defaultAgency);
+const fetchArchive = (page, pageSize, defaultAgency, auth) => {
+    let url;
+    if (auth.role === ROLE_AGENT) {
+        url = API_URL + `tickets/archive/${auth.username}?page=${page}&pageSize=${pageSize}&source=`;
+    } else {
+        url = API_URL + `tickets/archive?page=${page}&pageSize=${pageSize}&source=`;
+    }
+    return axios.get(url + defaultAgency)
 }
 
 const fetchAgency = () => {
@@ -32,7 +39,7 @@ function ArchiveAdmin() {
     const {
         data: archives,
         isLoading
-    } = useQuery(["archived", pagination.current, pagination.pageSize, defaultAgency], () => fetchArchive(pagination.current - 1, pagination.pageSize, defaultAgency), {
+    } = useQuery(["archived", pagination.current, pagination.pageSize, defaultAgency, auth], () => fetchArchive(pagination.current - 1, pagination.pageSize, defaultAgency, auth), {
         onSuccess: (data) => {
             setFilteredData(data?.data.content);
             setPagination({

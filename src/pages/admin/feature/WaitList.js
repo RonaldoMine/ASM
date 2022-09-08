@@ -32,6 +32,7 @@ import {
 } from "../../../global/statusTickets";
 import {useAssignTicket} from "./hooks/useAssignTicket";
 import {GET_COLOR_TICKET_STATUS, GET_TCIKET_LABELS} from "../../../global/utils";
+import {ROLE_AGENT} from "../../../global/roles";
 
 const {Option} = Select;
 const EditableContext = React.createContext(null);
@@ -137,8 +138,14 @@ const MenusExport = (handleExportTicket) => (
 );
 
 //List WaitList
-const fetchWaitlist = (page, pageSize, defaultAgency) => {
-    return axios.get(API_URL + `tickets/waitlist?page=${page}&pageSize=${pageSize}&source=` + defaultAgency)
+const fetchWaitlist = (page, pageSize, defaultAgency, auth) => {
+    let url;
+    if (auth.role === ROLE_AGENT) {
+        url = API_URL + `tickets/waitlist/${auth.username}?page=${page}&pageSize=${pageSize}&source=`;
+    } else {
+        url = API_URL + `tickets/waitlist?page=${page}&pageSize=${pageSize}&source=`;
+    }
+    return axios.get(url + defaultAgency)
 }
 //List user
 const fetchUser = ({queryKey}) => {
@@ -155,7 +162,6 @@ const fetchNextStatus = ({queryKey}) => {
     return axios.get(API_URL + "tickets/status?following=" + statusId);
 }
 
-
 //Waitlist component
 function WaitList() {
     //hooks
@@ -170,7 +176,7 @@ function WaitList() {
     const {
         mutate: assignTicket,
         isLoading: isLoadingAssign
-    } = useAssignTicket(["waitlist", pagination.current, pagination.pageSize, defaultAgency]);
+    } = useAssignTicket(["waitlist", pagination.current, pagination.pageSize, defaultAgency, auth]);
     let [filteredData, setFilteredData] = useState([]);
     let [filteredUserData, setFilteredUserData] = useState([]);
     let [currentSelectedStatus, setCurrentSelectedStatus] = useState("");
@@ -178,7 +184,7 @@ function WaitList() {
     const {
         data: waitlist,
         isLoading
-    } = useQuery(["waitlist", pagination.current, pagination.pageSize, defaultAgency], () => fetchWaitlist(pagination.current - 1, pagination.pageSize, defaultAgency), {
+    } = useQuery(["waitlist", pagination.current, pagination.pageSize, defaultAgency, auth], () => fetchWaitlist(pagination.current - 1, pagination.pageSize, defaultAgency, auth), {
         onSuccess: (data) => {
             setFilteredData(data?.data.content);
             setPagination({
@@ -256,10 +262,10 @@ function WaitList() {
         }
     };
     const onUpdateStatutTicket = (data, onChange, onBlur) => {
-        if (data.assigned_to === TICKET_LABEL_UNASSIGNED){
+        if (data.assigned_to === TICKET_LABEL_UNASSIGNED) {
             onBlur();
             message.warning(`Vous devez d'abord attribué la tâche à un utilisateur`);
-        }else{
+        } else {
             if (data.status !== data.old_value) {
                 updateState(data);
                 onChange(data.status);
@@ -296,7 +302,7 @@ function WaitList() {
             title: 'Attribuer à',
             dataIndex: 'assigned_to',
             key: 'assignee',
-            editable: true,
+            editable: auth.role !== ROLE_AGENT,
             type: "select",
             sorter: {
                 compare: (a, b) => a.assigned_to.length - b.assigned_to.length,
