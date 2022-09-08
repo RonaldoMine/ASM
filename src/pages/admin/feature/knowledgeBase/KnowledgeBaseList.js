@@ -32,9 +32,9 @@ export const columns = [
     },*/
     {
         title: 'Dernière mise à jour',
-        dataIndex: 'updated_at',
-        key: 'updated_at',
-        render: (createdAt, record) => moment(record.updatedAt ?? record.createdAt).fromNow()
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        render: (createdAt) => moment(createdAt).fromNow()
     },
 ];
 
@@ -62,7 +62,7 @@ function KnowledgeBaseList() {
     const [tableIsLoading, setTableIsLoading] = useState(true);
     const {auth} = useAuth();
     let [defaultAgency, setDefaultAgency] = useState(auth.agency);
-    const {refetch: refetchKnowledgebase} = useQuery(['knowledgebase', defaultAgency], fetchKnowlegeBase, {
+    let {isLoading: isLoadingKnowlegeBase} = useQuery(['knowledgebase', defaultAgency], fetchKnowlegeBase, {
         onSuccess: (data) => {
             setKnowledgeBaseId(data.data.knowledgeBaseId);
         },
@@ -70,13 +70,13 @@ function KnowledgeBaseList() {
             setFilteredData([]);
             setKnowledgeBaseId(null);
             setTableIsLoading(false);
+            setPagination({pageSize: 10, current: 1});
         },
-        retry: 2
+        retry: 1
     });
     const {
         data: articles,
-        isLoading,
-        refetch: refetchArticles
+        isLoading
     } = useQuery(["articles", pagination.current, pagination.pageSize, knowledgeBaseId], () => fetchArticle(pagination.current - 1, pagination.pageSize, knowledgeBaseId), {
         onSuccess: (data) => {
             setFilteredData(data?.data.content);
@@ -85,21 +85,9 @@ function KnowledgeBaseList() {
             });
             setTableIsLoading(false);
         },
-        enabled: false
+        enabled: !!knowledgeBaseId
     });
     const {data: agencies, isAgencyLoading} = useQuery("agencieslist", fetchAgencies);
-    useEffect(() => {
-        if (knowledgeBaseId) {
-            setTableIsLoading(true);
-            refetchArticles();
-        }
-    }, [knowledgeBaseId]);
-    useEffect(() => {
-        if (knowledgeBaseId) {
-            setTableIsLoading(true);
-            refetchKnowledgebase();
-        }
-    }, [defaultAgency]);
 
     // # Funtions
     // Search In table
@@ -116,7 +104,8 @@ function KnowledgeBaseList() {
         <>
             <PageHeader style={{marginBottom: 20}}
                         title="Base de connaissances"
-                        extra={(auth.role === ROLE_ADMIN || auth.role === ROLE_SUPER_ADMIN) && [<Typography.Title level={5} key="title">Agence : </Typography.Title>,
+                        extra={(auth.role === ROLE_ADMIN || auth.role === ROLE_SUPER_ADMIN) && [<Typography.Title
+                            level={5} key="title">Agence : </Typography.Title>,
                             (!isAgencyLoading && (
                                 <Select key="select" style={{width: 200}} defaultValue={defaultAgency}
                                         onChange={(value) => setDefaultAgency(value)}>
@@ -124,49 +113,21 @@ function KnowledgeBaseList() {
                                         return (<Option key={agency.id} value={agency.name}>{agency.name}</Option>)
                                     })}
                                 </Select>)),
-                            <Link to={`create/${knowledgeBaseId}`} key="add"><Button type="primary">Créer un article</Button></Link>]}
+                            <Link to={`create/${knowledgeBaseId}`} key="add"><Button type="primary">Créer un
+                                article</Button></Link>]}
             />
             <p>Une base de connaissances est une bibliothèque en ligne accessible en libre-service, qui regroupe des
                 informations sur un produit, un service, un département ou un thème. </p>
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}
                           style={{width: 300, marginBottom: 20}}/>
-            <Table loading={tableIsLoading} columns={columns} rowClassName="waitlist-table_row--shadow" rowSelection={{type: 'checkbox'}}
-                   rowKey="articleId" dataSource={filteredData}
+            <Table loading={tableIsLoading || isLoadingKnowlegeBase} columns={columns} rowClassName="waitlist-table_row--shadow"
+                   rowSelection={{type: 'checkbox'}}
+                   rowKey="articleId" dataSource={filteredData} pagination={{
+                ...pagination, showSizeChanger: true, onChange: (page, pageSize) => {
+                    setPagination({current: page, pageSize: pageSize})
+                }
+            }}
                    className="all-knowledgebase_table" scroll={{x: "true"}}/>
-
-            {/*Modal */}
-            {/*<Modal width={800}
-                   cancelText={"Annuler"} okText={"Créer"} visible={isOpen} onCancel={handleCancel} onOk={handleCreate}
-                   confirmLoading={confirmLoading}>
-                <Form
-                    name="create_knowledge"
-                    layout='vertical'
-                    autoComplete="off"
-                    form={form}
-                >
-                    <Form.Item
-                        label="Titre"
-                        name="title" rules={[{required: true, message: "Insérez un titre"}]}>
-                        <Input/>
-                    </Form.Item>
-                    <Form.Item
-                        label="Catégorie"
-                        name="category">
-                        <Select name="catergory" placeholder="Sélectionnez une catégorie">
-                            <Select.Option>
-                                Categorie 1
-                            </Select.Option>
-                        </Select>
-                    </Form.Item>
-                    <Form.Item label="Description" name="description"
-                               rules={[{required: true, message: "Insérez la description de l'article"}]}>
-                        <BraftEditor language="fr"
-                                     contentStyle={{height: 210, boxShadow: 'inset 0 1px 3px rgba(0,0,0,.1)'}}
-                                     onChange={onChangeBraft}/>
-                    </Form.Item>
-                </Form>
-            </Modal>*/}
-            {/*Modal */}
         </>
     )
 }

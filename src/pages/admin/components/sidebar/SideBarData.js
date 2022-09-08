@@ -92,11 +92,6 @@ export const SideBarData = (auth) => [
                 icon: <ReadOutlined/>
             },
             {
-                title: auth.role === ROLE_AGENT ? 'Mes suggestions' : 'Suggestions',
-                path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/info/suggestions`,
-                icon: <ContainerOutlined/>
-            },
-            {
                 title: 'Aide',
                 path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/info/help`,
                 icon: <QuestionOutlined/>

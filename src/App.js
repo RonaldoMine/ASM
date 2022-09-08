@@ -9,8 +9,6 @@ import KnowledgeBaseEdit from "./pages/admin/feature/knowledgeBase/KnowledgeBase
 import KnowledgeBaseAdd from "./pages/admin/feature/knowledgeBase/KnowledgeBaseAdd";
 import TicketDetail from "./pages/admin/feature/ticket/TicketDetail";
 import ArchiveAdmin from './pages/admin/feature/ticket/ArchiveAdmin';
-import Suggestion from './pages/admin/feature/suggestion/Suggestion';
-import Missing from './components/missing/Missing';
 import WaitList from "./pages/admin/feature/WaitList";
 import CustomStatistic from "./pages/admin/feature/dashboard/CustomStatistic";
 import RequireAuth from "./auth/component/RequireAuth";
@@ -46,7 +44,6 @@ function App() {
                                 </Route>
                                 <Route path="detail/:articleId" element={<KnowledgeBaseDetail/>}/>
                             </Route>
-                            <Route path="suggestions" element={<Suggestion/>}/>
                         </Route>
                         <Route path="dashboard" element={<RequireAuth allowedRoles={[ROLE_SUPER_ADMIN, ROLE_ADMIN]}/>}>
                             <Route path="stats" element={<CustomStatistic/>}></Route>

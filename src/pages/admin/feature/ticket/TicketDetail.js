@@ -159,7 +159,7 @@ function TicketDetail() {
             </Popconfirm> </Tooltip>);
         } else {
             return (<Tooltip key="delete" title="Fermer"><Popconfirm
-                title="Confirmer la ferméture du ticket" okText={"Fermé"} cancelText={"Annuler"} placement={'left'}
+                title="Confirmer la ferméture du ticket" okText={"Fermer"} cancelText={"Annuler"} placement={'left'}
                 onConfirm={() => changeStatus("4", "Fermé")}>
                 <Button type="link" danger icon={<IssuesCloseOutlined style={{fontSize: 25}}/>}></Button>
             </Popconfirm> </Tooltip>);
@@ -205,7 +205,8 @@ function TicketDetail() {
                             <Typography.Title
                                 level={4}>Description</Typography.Title>
 
-                            <p dangerouslySetInnerHTML={{ __html: ticket?.data.description}} style={{textAlign: "justify"}}></p></>)}
+                            <p dangerouslySetInnerHTML={{__html: ticket?.data.description}}
+                               style={{textAlign: "justify"}}></p></>)}
                     </Form>
                     <div>
                         <p>Activité</p>

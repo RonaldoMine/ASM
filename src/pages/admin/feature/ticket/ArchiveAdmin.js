@@ -5,44 +5,51 @@ import axios from 'axios'
 import '../TableSharedStyle.css'
 import {API_URL, API_USER_URL} from "../../../../global/axios";
 import useAuth from "../../../../auth/hook/useAuth";
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import CustomLoader from "../../components/custom/CustomLoader";
 import moment from "moment";
 import {GET_ROUTE_WITH_ROLE} from "../../../../global/utils";
+
+//Axios Functions
+const fetchArchive = (page, pageSize, defaultAgency) => {
+    return axios.get(API_URL + `tickets/archive?page=${page}&pageSize=${pageSize}&source=` + defaultAgency);
+}
+
+const fetchAgency = () => {
+    return axios.get(API_USER_URL + "users/agencies")
+}
 
 function ArchiveAdmin() {
     // Hooks
     let [filteredData, setFilteredData] = useState([]);
     let {auth} = useAuth();
     let [defaultAgency, setDefaultAgency] = useState(auth.agency);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+    });
 
-    //List Archives
-    const fetchArchive = () => {
-        return axios.get(API_URL+"tickets/archive?page=0&pageSize=10&source="+defaultAgency)
-    }
-    //List Agency
-    const fetchAgency = () => {
-        return axios.get(API_USER_URL+"users/agencies")
-    }
-    const {data: archives, refetch: refetchArchives, isLoading} = useQuery("archived", fetchArchive)
+    const {
+        data: archives,
+        isLoading
+    } = useQuery(["archived", pagination.current, pagination.pageSize, defaultAgency], () => fetchArchive(pagination.current - 1, pagination.pageSize, defaultAgency), {
+        onSuccess: (data) => {
+            setFilteredData(data?.data.content);
+            setPagination({
+                ...pagination, total: data?.data.totalElements
+            });
+        }
+    })
     const {data: agencies} = useQuery("agencieslist", fetchAgency)
-
-    useEffect(() => {
-        setFilteredData(archives?.data.content);
-    }, [archives]);
-    useEffect(() => {
-        refetchArchives().then(() => {
-        });
-    }, [defaultAgency])
 
     //Functions
 
     // Search In table
     const onSearch = (value) => {
         if (value !== '') {
-            setFilteredData(archives?.data.filter((data) => data.title.toLowerCase().includes(value.toLowerCase()) || data.description.toLowerCase().includes(value.toLowerCase())))
+            setFilteredData(archives?.data.content.filter((data) => data.title.toLowerCase().includes(value.toLowerCase()) || data.description.toLowerCase().includes(value.toLowerCase())))
         } else {
-            setFilteredData(archives?.data);
+            setFilteredData(archives?.data.content);
         }
     };
 
@@ -53,7 +60,8 @@ function ArchiveAdmin() {
             dataIndex: 'title',
             key: 'title',
             render: (text, record) => record.status !== "Fermé" ?
-                <Link to={`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/tickets/${record.id}`}>{text}</Link> : <p>{text}</p>
+                <Link to={`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/tickets/${record.id}`}>{text}</Link> :
+                <p>{text}</p>
         },
         {
             title: 'Description',
@@ -170,7 +178,13 @@ function ArchiveAdmin() {
             />
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}
                           style={{width: 300, marginBottom: 20}}/>
-            <Table columns={columns} rowKey="id" rowClassName="waitlist-table_row--shadow" dataSource={filteredData}
+            <Table loading={isLoading} columns={columns} rowKey="id" rowClassName="waitlist-table_row--shadow"
+                   dataSource={filteredData}
+                   pagination={{
+                       ...pagination, showSizeChanger: true, onChange: (page, pageSize) => {
+                           setPagination({current: page, pageSize: pageSize})
+                       }
+                   }}
                    className="all-tickets_table" scroll={{x: "true"}}/>
         </>
     )
