@@ -7,11 +7,11 @@ const addComments = ({ticket_id, comment}) => {
     }
 
 
-export const useAddComments = () => {
+export const useAddComments = (queryKey) => {
     const queryClient = useQueryClient();
         return useMutation(addComments, {
             onSuccess: (comment) => {
-                queryClient.invalidateQueries(["ticketComment", comment.data.ticketId]);
+                queryClient.invalidateQueries(queryKey);
             }
         });
     }

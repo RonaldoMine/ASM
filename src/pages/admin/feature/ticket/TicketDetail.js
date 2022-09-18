@@ -20,7 +20,7 @@ import {
     Tooltip,
     Typography
 } from "antd";
-import {IssuesCloseOutlined, FolderOpenOutlined} from "@ant-design/icons";
+import {FolderOpenOutlined, IssuesCloseOutlined} from "@ant-design/icons";
 import {useEffect, useState} from "react";
 import BraftEditor from "braft-editor";
 import CustomAvatarUser from "../../components/custom/CustomAvatarUser";
@@ -64,7 +64,7 @@ function TicketDetail() {
 
     const {data: ticket, isLoading} = useGetTicketData(ticketId);//get ticket data
     const {mutate: editTitleandDescription} = useEditTicketTitleAndDescription();//edit ticket title and description
-    const {mutate: addComments} = useAddComments();//add comment
+    const {mutate: addComments} = useAddComments(['ticketComment', ticketId]);//add comment
     const {auth} = useAuth(); // Get Auth
     const {mutate: updateState} = useUpdateStatus(['ticketData', ticketId]);
     const [form] = Form.useForm();
@@ -108,9 +108,6 @@ function TicketDetail() {
     //Close ticket
     const changeStatus = (status, text) => {
         updateState({id: ticketId, status: status})
-        /*if (status === 4) {
-            navigate(-1);
-        }*/
         message.success(`Ticket ${text}`);
 
     }

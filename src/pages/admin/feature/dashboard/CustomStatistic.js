@@ -2,14 +2,14 @@ import {Column, Pie} from '@ant-design/plots';
 import {Card, Col, DatePicker, PageHeader, Row, Select, Statistic} from "antd";
 import Moment from "moment";
 import 'moment/locale/fr';
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import useAuth from "../../../../auth/hook/useAuth";
 import axios from "axios";
 import {API_URL, API_USER_URL} from "../../../../global/axios";
 import {useQuery} from "react-query";
 import locale from 'antd/es/date-picker/locale/fr_FR';
 import './CustomStatistic.css';
-import {PRIMARY_COLOR, SUCCESS_COLOR, WARNING_COLOR} from "../../../../global/colors";
+import {DARK_COLOR, PRIMARY_COLOR, SUCCESS_COLOR, WARNING_COLOR} from "../../../../global/colors";
 
 //Axios functions
 const fetchAgency = () => {
@@ -18,6 +18,10 @@ const fetchAgency = () => {
 
 const fetchIncidentStats = (agency, startDate, endDate) => {
     return axios.get(API_URL + `tickets/stats/incidents?source=${agency}&startDate=${startDate.format("YYYY-MM-DD")}&endDate=${endDate.format("YYYY-MM-DD")}`)
+}
+
+const fetchGraphIncidentStats = (agency, startDate, endDate) => {
+    return axios.get(API_URL + `tickets/graph-stats/incidents?source=${agency}&startDate=${startDate.format("YYYY-MM-DD")}&endDate=${endDate.format("YYYY-MM-DD")}`)
 }
 
 //Other Functions
@@ -32,34 +36,50 @@ function CustomStatistic() {
     let {auth} = useAuth();
     let [startDate, setStartDate] = useState(new Moment(Moment.now()));
     let [endDate, setEndDate] = useState(new Moment(Moment.now()));
+    let [graphDatas, setGraphDatas] = useState([]);
+    let [pieDatas, setPieDatas] = useState({
+        allIncidentsBetween: null,
+        allNewIncidents: null,
+        allSolvedIncidents: null,
+        allProcessingIncidents: null,
+        allClosedIncidents: null
+    });
 
     const {data: agencies} = useQuery("agencieslist", fetchAgency)
-    const {
-        data: statsIncidents,
-        refetch: refetchStatsIncident
-    } = useQuery(["statsincidents", auth.agency], () => fetchIncidentStats(auth.agency, startDate, endDate))
-    useEffect(() => {
-        refetchStatsIncident().then(() => {
-        });
-    }, [startDate, endDate])
+    useQuery(["statsincidents", auth.agency, startDate, endDate], () => fetchIncidentStats(auth.agency, startDate, endDate), {
+        onSuccess: ((statsIncidents) => {
+            setPieDatas({
+                allIncidentsBetween: statsIncidents.data.allIncidentsBetween,
+                allNewIncidents: statsIncidents.data.allNewIncidents,
+                allSolvedIncidents: statsIncidents.data.allSolvedIncidents,
+                allProcessingIncidents: statsIncidents.data.allProcessingIncidents,
+                allClosedIncidents: statsIncidents.data.allClosedIncidents,
+            })
+        })
+    })
+    useQuery(["graphstatsincidents", auth.agency, startDate, endDate], () => fetchGraphIncidentStats(auth.agency, startDate, endDate), {
+        onSuccess: ((datas) => {
+            setGraphDatas(datas.data)
+        })
+    })
 
     //Data
     const dataPie = [
         {
             type: 'Nouveaux',
-            value: statsIncidents?.data.allNewIncidents,
+            value: pieDatas.allNewIncidents,
         },
         {
             type: 'Résolus',
-            value: statsIncidents?.data.allSolvedIncidents,
+            value: pieDatas.allSolvedIncidents,
         },
         {
             type: 'En cours',
-            value: statsIncidents?.data.allProcessingIncidents,
+            value: pieDatas.allProcessingIncidents,
         },
         {
             type: 'Fermés',
-            value: statsIncidents?.data.allClosedIncidents,
+            value: pieDatas.allClosedIncidents,
         },
     ];
     const config = {
@@ -83,94 +103,13 @@ function CustomStatistic() {
         ],
     };
 
-    const dataColumn = [
-        {
-            name: 'Ouvert',
-            month: 'Jan.',
-            value: 30,
-        },
-        {
-            name: 'Ouvert',
-            month: 'Feb.',
-            value: 10,
-        },
-        {
-            name: 'Ouvert',
-            month: 'Mar.',
-            value: 24,
-        },
-        {
-            name: 'Ouvert',
-            month: 'Apr.',
-            value: 5,
-        },
-        {
-            name: 'Ouvert',
-            month: 'May',
-            value: 47,
-        },
-        {
-            name: 'Ouvert',
-            month: 'Jun.',
-            value: 20,
-        },
-        {
-            name: 'Ouvert',
-            month: 'Jul.',
-            value: 24,
-        },
-        {
-            name: 'Ouvert',
-            month: 'Aug.',
-            value: 42,
-        },
-        {
-            name: 'Résolu',
-            month: 'Jan.',
-            value: 12,
-        },
-        {
-            name: 'Résolu',
-            month: 'Feb.',
-            value: 10,
-        },
-        {
-            name: 'Résolu',
-            month: 'Mar.',
-            value: 5,
-        },
-        {
-            name: 'Résolu',
-            month: 'Apr.',
-            value: 20,
-        },
-        {
-            name: 'Résolu',
-            month: 'May',
-            value: 6,
-        },
-        {
-            name: 'Résolu',
-            month: 'Jun.',
-            value: 15,
-        },
-        {
-            name: 'Résolu',
-            month: 'Jul.',
-            value: 14,
-        },
-        {
-            name: 'Résolu',
-            month: 'Aug.',
-            value: 35,
-        },
-    ];
     const configColumn = {
-        data: dataColumn,
+        data: graphDatas,
         isGroup: true,
-        xField: 'month',
+        xField: 'label',
         yField: 'value',
-        seriesField: 'name',
+        seriesField: 'title',
+        color: [WARNING_COLOR, PRIMARY_COLOR, SUCCESS_COLOR, DARK_COLOR],
         label: {
             position: 'middle',
             // 'top', 'middle', 'bottom'
@@ -207,36 +146,36 @@ function CustomStatistic() {
         <Row style={{padding: 40}}>
             <Col span={8}>
                 <Card className='card-stats'>
-                    <Statistic title="Tous les tickets" value={statsIncidents?.data.allIncidentsBetween}/>
+                    <Statistic title="Tous les tickets" value={pieDatas.allIncidentsBetween}/>
                 </Card>
             </Col>
             <Col span={8}>
                 <Card className='card-stats'>
                     <Statistic title="Nouveaux tickets" valueStyle={{color: PRIMARY_COLOR}}
-                               value={statsIncidents?.data.allNewIncidents}/>
+                               value={pieDatas.allNewIncidents}/>
                 </Card>
             </Col>
             <Col span={8}>
                 <Card className='card-stats'>
                     <Statistic title="Tickets résolus / fermés" valueStyle={{color: SUCCESS_COLOR}}
-                               value={statsIncidents?.data.allSolvedorClosedIncidents}/>
+                               value={pieDatas.allSolvedorClosedIncidents}/>
                 </Card>
             </Col>
             <Col span={8}>
                 <Card className='card-stats'>
                     <Statistic title="Tickets en cours" valueStyle={{color: WARNING_COLOR}}
-                               value={statsIncidents?.data.allProcessingIncidents}/>
+                               value={pieDatas.allProcessingIncidents}/>
                 </Card>
             </Col>
             <Col span={8}>
                 <Card className='card-stats'>
                     <Statistic title="Tickets résolus" valueStyle={{color: SUCCESS_COLOR}}
-                               value={statsIncidents?.data.allSolvedIncidents}/>
+                               value={pieDatas.allSolvedIncidents}/>
                 </Card>
             </Col>
             <Col span={8}>
                 <Card className='card-stats'>
-                    <Statistic title="Tickets fermés" value={statsIncidents?.data.allClosedIncidents}/>
+                    <Statistic title="Tickets fermés" value={pieDatas.allClosedIncidents}/>
                 </Card>
             </Col>
         </Row>
