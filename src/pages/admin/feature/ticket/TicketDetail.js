@@ -10,6 +10,7 @@ import {
     Input,
     List,
     message,
+    Modal,
     PageHeader,
     Popconfirm,
     Row,
@@ -20,8 +21,8 @@ import {
     Tooltip,
     Typography
 } from "antd";
-import {FolderOpenOutlined, IssuesCloseOutlined} from "@ant-design/icons";
-import {useEffect, useState} from "react";
+import {ExclamationCircleOutlined, FolderOpenOutlined, IssuesCloseOutlined} from "@ant-design/icons";
+import React, {useEffect, useState} from "react";
 import BraftEditor from "braft-editor";
 import CustomAvatarUser from "../../components/custom/CustomAvatarUser";
 import {useGetTicketData} from "../hooks/useGetTicketData";
@@ -60,9 +61,13 @@ function TicketDetail() {
     const [submittingForm, setSubmittingForm] = useState(false); // Comment Button to make loader
     const [comment, setComment] = useState(''); // Value Comment
     const [title, setEditableTitle] = useState(""); // Manage Typography editable
+    const [editStatus, setEditStatus] = useState(false); // Manage Typography editable
     const [activity, setActivity] = useState("Commentaires"); // Manage segmented
 
-    const {data: ticket, isLoading} = useGetTicketData(ticketId);//get ticket data
+    const {
+        data: ticket, isLoading,
+        refetch: refetchTicket
+    } = useGetTicketData(ticketId);//get ticket data
     const {mutate: editTitleandDescription} = useEditTicketTitleAndDescription();//edit ticket title and description
     const {mutate: addComments} = useAddComments(['ticketComment', ticketId]);//add comment
     const {auth} = useAuth(); // Get Auth
@@ -72,7 +77,7 @@ function TicketDetail() {
 
     const {
         data: ticketCommentData,
-        isLoading: loadingComment
+        isLoading: loadingComment,
     } = useQuery(["ticketComment", ticketId], fetchTicketComment)
 
 
@@ -87,7 +92,6 @@ function TicketDetail() {
     //side effect, set title
     useEffect(() => {
         setEditableTitle(ticket?.data.title)
-
     }, [ticket?.data.title])
 
     //side effect, load history
@@ -107,8 +111,44 @@ function TicketDetail() {
     };
     //Close ticket
     const changeStatus = (status, text) => {
-        updateState({id: ticketId, status: status})
-        message.success(`Ticket ${text}`);
+        if (status !== ticket?.data.status.statusId) {
+            if (parseInt(status) === 3) {
+                Modal.confirm({
+                    title: 'Confimer la résolution de ce ticket',
+                    icon: <ExclamationCircleOutlined/>,
+                    content: <>
+                        <TextArea row={10} style={{resize: "none"}} placeholder="Note de résolution"
+                                  onChange={(e) => {
+                                      if (e.target.value.length <= 150){
+                                          console.log(e.target.value.length);
+                                          ticket.data.note = e.target.value;
+                                      }
+                                  }
+                                  } showCount={true} maxLength={150}>{ticket.data.note}</TextArea>
+                    </>,
+                    okText: 'Valider',
+                    style: {position: 'relative', top: 'calc(100vh - 68%)'},
+                    cancelText: 'Annuler',
+                    onOk: () => {
+                        if (ticket?.data.note !== '') {
+                            updateState({id: ticketId, status: status, note: ticket?.data.note});
+                            message.success(`Ticket ${text}`);
+                            setEditStatus(false)
+                        } else {
+                            setEditStatus(false);
+                            message.error(`Mise à jour non prise en compte, vous n'avez pas renseigner une note`);
+                        }
+                    },
+                    onCancel: () => {
+                        setEditStatus(false)
+                    }
+                });
+            } else {
+                setEditStatus(false)
+                updateState({id: ticketId, status: status, note: parseInt(status) === 4 ? ticket.data.note : ""})
+                message.success(`Ticket ${text}`);
+            }
+        }
 
     }
 
@@ -242,7 +282,7 @@ function TicketDetail() {
                     </div>
                 </Col>
                 <Col span={8} style={{padding: 5}}>
-                    <div>
+                    {/*<div>
                         {ticket?.data.status.statusId !== 4 && <Select defaultValue={ticket?.data.status.statusLabel}
                                                                        style={{width: 120, marginBottom: 15}}
                                                                        onChange={(status, option) => {
@@ -252,7 +292,7 @@ function TicketDetail() {
                             <Select.Option value="2">En cours</Select.Option>
                             <Select.Option value="3">Résolu</Select.Option>
                         </Select>}
-                    </div>
+                    </div>*/}
                     <Space size="small" direction="vertical" style={{display: "flex"}}>
                         <Collapse expandIconPosition="end" defaultActiveKey={['1']} onChange={() => {
                         }}>
@@ -275,11 +315,28 @@ function TicketDetail() {
                                         </Col>
                                     </Row>
                                     <Row>
-                                        <Col span="8">
-                                            Status
+                                        <Col span="8" onClick={() => {
+                                            if (ticket?.data.status.statusId !== 4) {
+                                                setEditStatus(!editStatus)
+                                            }
+                                        }}>
+                                            <Tooltip title="Cliquer pour modifier le statut">Status</Tooltip>
                                         </Col>
                                         <Col span="16">
-                                            {ticket?.data.status.statusLabel}
+                                            {editStatus ? <>
+                                                <div>
+                                                    {ticket?.data.status.statusId !== 4 &&
+                                                        <Select defaultValue={ticket?.data.status.statusLabel}
+                                                                style={{width: 120, marginBottom: 15}}
+                                                                onChange={(status, option) => {
+                                                                    changeStatus(status, option.children)
+                                                                }}>
+                                                            <Select.Option value="1">Assigné</Select.Option>
+                                                            <Select.Option value="2">En cours</Select.Option>
+                                                            <Select.Option value="3">Résolu</Select.Option>
+                                                        </Select>}
+                                                </div>
+                                            </> : ticket?.data.status.statusLabel}
                                         </Col>
                                     </Row>
                                     <Row>
@@ -290,6 +347,14 @@ function TicketDetail() {
                                             {ticket?.data.category.name}
                                         </Col>
                                     </Row>
+                                    {ticket?.data.note && <Row>
+                                        <Col span="8">
+                                            Note
+                                        </Col>
+                                        <Col span="16">
+                                            {ticket?.data.note}
+                                        </Col>
+                                    </Row>}
                                 </Space>
                             </Panel>
                         </Collapse>

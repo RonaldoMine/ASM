@@ -5,7 +5,7 @@ import {
     Form,
     Input,
     Menu,
-    message,
+    message, Modal,
     PageHeader,
     Select,
     Space,
@@ -17,7 +17,7 @@ import {useQuery} from 'react-query'
 import {Link} from "react-router-dom";
 import axios from 'axios'
 import {useUpdateStatus} from './hooks/useUpdateStatus';
-import {CheckOutlined, DownloadOutlined, LockOutlined} from "@ant-design/icons";
+import {CheckOutlined, DownloadOutlined, ExclamationCircleOutlined, LockOutlined} from "@ant-design/icons";
 import './TableSharedStyle.css'
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import CustomLoader from '../components/custom/CustomLoader';
@@ -33,8 +33,10 @@ import {
 import {useAssignTicket} from "./hooks/useAssignTicket";
 import {GET_COLOR_TICKET_STATUS, GET_TCIKET_LABELS} from "../../../global/utils";
 import {ROLE_AGENT} from "../../../global/roles";
+import TextArea from "antd/lib/input/TextArea";
 
 const {Option} = Select;
+
 const EditableContext = React.createContext(null);
 
 //Functions
@@ -262,14 +264,40 @@ function WaitList() {
         }
     };
     const onUpdateStatutTicket = (data, onChange, onBlur) => {
+        data.note = '';
         if (data.assigned_to === TICKET_LABEL_UNASSIGNED) {
             onBlur();
             message.warning(`Vous devez d'abord attribué la tâche à un utilisateur`);
         } else {
             if (data.status !== data.old_value) {
-                updateState(data);
-                onChange(data.status);
-                message.success(`Ticket ${data.label}`);
+                if (data.status === 3) {
+                    Modal.confirm({
+                        title: 'Confimer la résolution de ce ticket',
+                        icon: <ExclamationCircleOutlined/>,
+                        content: <>
+                            <TextArea placeholder="Note de résolution"
+                                      onChange={(e) => data.note = e.target.value}>{data.note}</TextArea>
+                        </>,
+                        okText: 'Valider',
+                        style: {position: 'relative', top: 'calc(100vh - 68%)'},
+                        cancelText: 'Annuler',
+                        onOk: () => {
+                            if (data.note !== '') {
+                                updateState(data);
+                                onChange(data.status);
+                                message.success(`Ticket ${data.label}`);
+                            } else {
+                                message.error(`Mise à jour non prise en compte, vous n'avez pas renseigner une note`);
+                            }
+                        },
+                        onCancel: () => {
+                        }
+                    });
+                } else {
+                    updateState(data);
+                    onChange(data.status);
+                    message.success(`Ticket ${data.label}`);
+                }
             }
         }
     };
@@ -370,6 +398,7 @@ function WaitList() {
                                     status: status,
                                     old_value: record.status.statusId,
                                     label: option.children,
+                                    note: record.note,
                                     assigned_to: record.assigned_to
                                 }, onChange, onBlur)
                             }} onBlur={onBlur} onClick={() => {
