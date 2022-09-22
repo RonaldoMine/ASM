@@ -6,7 +6,7 @@ const updateStatus = (elt) => {
     return axios.patch(API_URL+`tickets/status/update?ticketId=${elt.id}&statusId=${elt.status}&note=${elt.note}`)
 }
 
-export const useUpdateStatus = (queryKey = "waitlist") => {
+export const useUpdateStatus = (queryKey = "waitlist-incident") => {
     const queryClient = useQueryClient();
     return useMutation(updateStatus, {
         onSuccess: () => {

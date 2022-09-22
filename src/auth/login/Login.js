@@ -31,7 +31,7 @@ function Login() {
             );
             const {username, email, agency, role, department} = response?.data
             signIn({username, email, agency, role, department});
-            navigate(`/${GET_ROUTE_WITH_ROLE(role)}/general/tickets`, {replace: true});
+            navigate(`/${GET_ROUTE_WITH_ROLE(role)}/general/incidents`, {replace: true});
         } catch (err) {
             if (!err?.response) {
                 message.error("Aucune réponse du serveur")

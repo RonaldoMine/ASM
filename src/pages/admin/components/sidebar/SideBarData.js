@@ -1,7 +1,7 @@
 import React from "react";
 import {
     BarsOutlined,
-    ContainerOutlined,
+    QuestionCircleOutlined,
     ControlOutlined,
     DashboardOutlined,
     ExclamationCircleOutlined,
@@ -34,6 +34,23 @@ const dashboardMenu = (role) => {
     }
     return [];
 };
+const generalMenu = (role) => {
+    let menu = [];
+    menu.push({
+        title: role === ROLE_AGENT ? 'Mes Incidents' : 'Incidents',
+        path: `/${GET_ROUTE_WITH_ROLE(role)}/general/incidents`,
+        icon: <ExclamationCircleOutlined/>,
+    });
+    if (role !== ROLE_AGENT) {
+        menu.push(
+            {
+                title: 'Problèmes',
+                path: `/${GET_ROUTE_WITH_ROLE(role)}/general/problems`,
+                icon: <QuestionCircleOutlined />,
+            });
+    }
+    return menu;
+};
 const settingMenu = (role) => {
     let data = [
         {
@@ -42,7 +59,7 @@ const settingMenu = (role) => {
             icon: <UserOutlined/>
         }
     ];
-    if (role === ROLE_ADMIN || role === ROLE_SUPER_ADMIN){
+    if (role === ROLE_ADMIN || role === ROLE_SUPER_ADMIN) {
         data.push(
             {
                 title: 'Catégories',
@@ -68,11 +85,7 @@ export const SideBarData = (auth) => [
         path: 'general',
         icon: <HomeOutlined/>,
         subnav: [
-            {
-                title: auth.role === ROLE_AGENT ? 'Mes Tickets' : 'Tickets',
-                path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/general/tickets`,
-                icon: <ExclamationCircleOutlined/>,
-            },
+            ...generalMenu(auth.role),
             {
                 title: auth.role === ROLE_AGENT ? 'Mes Archives' : 'Archives',
                 path: `/${GET_ROUTE_WITH_ROLE(auth.role)}/general/archives`,

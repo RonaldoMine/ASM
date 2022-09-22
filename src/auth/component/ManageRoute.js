@@ -7,7 +7,7 @@ const ManageRoute = () => {
     const { auth } = useAuth();
     const location = useLocation();
     return (
-            auth ? location.pathname === "/" ? <Navigate to={`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/tickets`} /> : <Missing />
+            auth ? location.pathname === "/" ? <Navigate to={`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/incidents`} /> : <Missing />
             : <Navigate to="/login" state={{ from: location }} replace />
     );
 }

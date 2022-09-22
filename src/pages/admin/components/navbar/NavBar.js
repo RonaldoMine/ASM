@@ -1,6 +1,6 @@
 //imports
-import React, {useState} from 'react'
-import {Avatar, Button, Form, Input, Layout, message, Modal, Select, Space, TreeSelect} from 'antd'
+import React, {useMemo, useRef, useState} from 'react'
+import {Avatar, Button, Form, Input, Layout, message, Modal, Select, Space, Spin, TreeSelect} from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
 import {bellMenu, profileMenu} from './NavBarData';
@@ -13,6 +13,8 @@ import axios from "axios";
 import {API_URL} from "../../../../global/axios";
 import {useQuery} from "react-query";
 import {TICKET_LABEL_UNASSIGNED} from "../../../../global/statusTickets";
+import {ROLE_AGENT} from "../../../../global/roles";
+import debounce from 'lodash/debounce';
 
 //instanciations
 const {Header} = Layout;
@@ -23,6 +25,51 @@ const fetchCategories = () => {
     return axios.get(API_URL + "tickets/categories/parent")
 }
 
+function DebounceSelect({fetchOptions, debounceTimeout = 800, ...props}) {
+    const [fetching, setFetching] = useState(false);
+    const [options, setOptions] = useState([]);
+    const fetchRef = useRef(0);
+    const debounceFetcher = useMemo(() => {
+        const loadOptions = (value) => {
+            fetchRef.current += 1;
+            const fetchId = fetchRef.current;
+            setOptions([]);
+            setFetching(true);
+            fetchOptions(value).then((newOptions) => {
+                if (fetchId !== fetchRef.current) {
+                    // for fetch callback order
+                    return;
+                }
+
+                setOptions(newOptions);
+                setFetching(false);
+            });
+        };
+
+        return debounce(loadOptions, debounceTimeout);
+    }, [fetchOptions, debounceTimeout]);
+    return (
+        <Select
+            labelInValue
+            filterOption={false}
+            onSearch={debounceFetcher}
+            notFoundContent={fetching ? <Spin size="small"/> : null}
+            {...props}
+            options={options}
+        />
+    );
+}
+
+function fetchIncidentList(title) {
+    return axios.get(API_URL + 'incidents/filter-by-title?title=' + title)
+        .then((body) =>
+            body.data.map((incident) => ({
+                label: `${incident.title}`,
+                value: incident.id,
+            })),
+        );
+}
+
 const NavBar = () => {
 
     //Hooks
@@ -31,7 +78,9 @@ const NavBar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
     const [categoryTreeValue, setcategoryTreeValue] = useState();
-    const [treeSelectOpen, setTreeSelectOpen] = useState(false)
+    const [treeSelectOpen, setTreeSelectOpen] = useState(false);
+    const [typeTicket, setTypeTicket] = useState(0);
+    const [incidents, setIncidents] = useState([]);
     const {mutate: addTicket} = useAddTickets();
     const {auth, signOut} = useAuth();
     const navigate = useNavigate();
@@ -77,11 +126,25 @@ const NavBar = () => {
         setConfirmLoading(true);
         form.validateFields()
             .then(value => {
-                addTicket({...value, category: value.category.toString(), source: auth.agency});
+                let incidents = value.incidents?.map((incident) => incident.value)
+                addTicket({
+                    ...value,
+                    category: value.category.toString(),
+                    assigned_to: TICKET_LABEL_UNASSIGNED,
+                    source: auth.agency,
+                    reporter: auth.username,
+                    status: 'Nouveau',
+                    incidents : incidents,
+                    type: auth.role === ROLE_AGENT ? 0 : value.type
+                });
                 form.resetFields()
                 setIsOpen(false);
                 setConfirmLoading(false);
-            }).catch(() => {
+                setIncidents([]);
+                setTypeTicket(0);
+                message.success("Ticket créé avec succès");
+            }).catch((error) => {
+                console.log(error)
             message.error("ticket non créé");
             setConfirmLoading(false);
         })
@@ -129,7 +192,11 @@ const NavBar = () => {
                 <span className='header_left_company-name'>Afriland First Bank</span>
 
                 <Button type='primary' className='header_left_create-button'
-                        onClick={() => setIsOpen(true)}
+                        onClick={() => {
+                            setTypeTicket(0);
+                            setIncidents([]);
+                            setIsOpen(true)
+                        }}
                 >Créer un ticket</Button>
             </div>
 
@@ -143,6 +210,24 @@ const NavBar = () => {
                     autoComplete="off"
                     form={form}
                 >
+                    <Form.Item
+                        label="Type de Ticket"
+                        name="type"
+                        initialValue={auth.role === ROLE_AGENT ? 'Incident' : '0'}
+                        rules={[{required: true, message: 'Choisr un type!'}]}
+                    >
+                        {
+                            auth.role === ROLE_AGENT ? <Input disabled={true}/> :
+                                <Select onChange={(value) => setTypeTicket(parseInt(value))}>
+                                    <Option value="0">
+                                        Incident
+                                    </Option>
+                                    <Option value="1">
+                                        Problème
+                                    </Option>
+                                </Select>
+                        }
+                    </Form.Item>
                     <Form.Item
                         label="Intitulé"
                         name="title"
@@ -158,31 +243,6 @@ const NavBar = () => {
                     >
                         <Input/>
                     </Form.Item>
-
-                    <Form.Item
-                        label="Émetteur"
-                        name="reporter"
-                        initialValue={auth.username}
-                    >
-                        <Input disabled/>
-                    </Form.Item>
-
-                    <Form.Item
-                        label="Attribuer à"
-                        name="assigned_to"
-                        initialValue={TICKET_LABEL_UNASSIGNED}
-                    >
-                        <Input disabled/>
-                    </Form.Item>
-
-                    <Form.Item
-                        label="Statut"
-                        name="status"
-                        initialValue={"Nouveau"}
-                    >
-                        <Input disabled/>
-                    </Form.Item>
-
                     <Form.Item
                         label="Département"
                         name="department"
@@ -229,6 +289,21 @@ const NavBar = () => {
                             onDropdownVisibleChange={(open) => setTreeSelectOpen(open)}
                         />
                     </Form.Item>
+
+                    {typeTicket === 1 && <Form.Item label={"Incidents"} name={"incidents"} initialValue={incidents}>
+                        <DebounceSelect
+                            mode="multiple"
+                            value={"value"}
+                            placeholder="Selectionner un ou plusieurs incidents"
+                            fetchOptions={fetchIncidentList}
+                            onChange={(newValue) => {
+                                setIncidents(newValue);
+                            }}
+                            style={{
+                                width: '100%',
+                            }}
+                        />
+                    </Form.Item>}
 
                 </Form>
             </Modal>

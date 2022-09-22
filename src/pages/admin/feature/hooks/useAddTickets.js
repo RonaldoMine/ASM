@@ -10,7 +10,7 @@ export const useAddTickets = () => {
     const queryClient = useQueryClient();
         return useMutation(addTickets, {
             onSuccess: () => {
-                queryClient.invalidateQueries("waitlist");
+                queryClient.invalidateQueries("waitlist-incident");
             }
         });
     }

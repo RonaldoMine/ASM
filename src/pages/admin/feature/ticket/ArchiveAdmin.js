@@ -12,12 +12,12 @@ import {GET_ROUTE_WITH_ROLE} from "../../../../global/utils";
 import {ROLE_AGENT} from "../../../../global/roles";
 
 //Axios Functions
-const fetchArchive = (page, pageSize, defaultAgency, auth) => {
+const fetchArchive = (page, pageSize, defaultAgency, typeTicket, auth) => {
     let url;
     if (auth.role === ROLE_AGENT) {
-        url = API_URL + `tickets/archive/${auth.username}?page=${page}&pageSize=${pageSize}&source=`;
+        url = API_URL + `tickets/archive/${auth.username}?page=${page}&pageSize=${pageSize}&type=0&source=`;
     } else {
-        url = API_URL + `tickets/archive?page=${page}&pageSize=${pageSize}&source=`;
+        url = API_URL + `tickets/archive?page=${page}&pageSize=${pageSize}&type=${typeTicket}&source=`;
     }
     return axios.get(url + defaultAgency)
 }
@@ -31,6 +31,7 @@ function ArchiveAdmin() {
     let [filteredData, setFilteredData] = useState([]);
     let {auth} = useAuth();
     let [defaultAgency, setDefaultAgency] = useState(auth.agency);
+    let [typeTicket, setTypeTicket] = useState(0);
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
@@ -39,7 +40,7 @@ function ArchiveAdmin() {
     const {
         data: archives,
         isLoading
-    } = useQuery(["archived", pagination.current, pagination.pageSize, defaultAgency, auth], () => fetchArchive(pagination.current - 1, pagination.pageSize, defaultAgency, auth), {
+    } = useQuery(["archived", pagination.current, pagination.pageSize, defaultAgency, typeTicket, auth], () => fetchArchive(pagination.current - 1, pagination.pageSize, defaultAgency, typeTicket, auth), {
         onSuccess: (data) => {
             setFilteredData(data?.data.content);
             setPagination({
@@ -67,7 +68,7 @@ function ArchiveAdmin() {
             dataIndex: 'title',
             key: 'title',
             render: (text, record) => record.status !== "Fermé" ?
-                <Link to={`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/tickets/${record.id}`}>{text}</Link> :
+                <Link to={`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/archives/${record.id}`}>{text}</Link> :
                 <p>{text}</p>
         },
         {
@@ -181,6 +182,12 @@ function ArchiveAdmin() {
                         {agencies?.data.map((agency) => {
                             return (<Select.Option key={agency.id} value={agency.name}>{agency.name}</Select.Option>)
                         })}
+                    </Select>,
+                    <Typography.Title level={5} key="type">Type : </Typography.Title>,
+                    <Select key="selectType" size={"large"} defaultValue={typeTicket}
+                            onChange={(value) => setTypeTicket(value)}>
+                        <Select.Option key={0} value={0}>Incidents</Select.Option>
+                        <Select.Option key={1} value={1}>Problèmes</Select.Option>
                     </Select>]}
             />
             <Input.Search placeholder="Recherche" onChange={(e) => onSearch(e.target.value)}

@@ -9,13 +9,14 @@ import KnowledgeBaseEdit from "./pages/admin/feature/knowledgeBase/KnowledgeBase
 import KnowledgeBaseAdd from "./pages/admin/feature/knowledgeBase/KnowledgeBaseAdd";
 import TicketDetail from "./pages/admin/feature/ticket/TicketDetail";
 import ArchiveAdmin from './pages/admin/feature/ticket/ArchiveAdmin';
-import WaitList from "./pages/admin/feature/WaitList";
 import CustomStatistic from "./pages/admin/feature/dashboard/CustomStatistic";
 import RequireAuth from "./auth/component/RequireAuth";
 import {ROLE_ADMIN, ROLE_AGENT, ROLE_SUPER_ADMIN} from "./global/roles";
 import Unauthorized from "./auth/unauthorized/Unauthorized";
 import Account from "./pages/admin/feature/account/Account";
 import ManageRoute from "./auth/component/ManageRoute";
+import Incident from "./pages/admin/feature/ticket/Incident";
+import Problem from "./pages/admin/feature/ticket/Problem";
 
 const qc = new QueryClient();
 
@@ -29,11 +30,19 @@ function App() {
                 <Route element={<RequireAuth allowedRoles={[ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_AGENT]}/>}>
                     <Route path="/:route" element={<Admin/>}>
                         <Route path="general">
-                            <Route path="tickets">
-                                <Route index element={<WaitList/>}/>
+                            <Route path="incidents">
+                                <Route index element={<Incident/>}/>
                                 <Route path=":ticketId" element={<TicketDetail/>}/>
                             </Route>
-                            <Route path="archives" element={<ArchiveAdmin/>}/>
+                            <Route path="problems"
+                                   element={<RequireAuth allowedRoles={[ROLE_SUPER_ADMIN, ROLE_ADMIN]}/>}>
+                                <Route index element={<Problem/>}/>
+                                <Route path=":ticketId" element={<TicketDetail/>}/>
+                            </Route>
+                            <Route path="archives">
+                                <Route index element={<ArchiveAdmin/>}/>
+                                <Route path=":ticketId" element={<TicketDetail/>}/>
+                            </Route>
                         </Route>
                         <Route path="info">
                             <Route path='knowledge_base'>

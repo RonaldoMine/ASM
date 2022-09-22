@@ -6,7 +6,7 @@ const assignTicket = (elt) => {
     return axios.patch(API_URL+`ticket/assign?ticketId=${elt.id}&to=${elt.to}`)
 }
 
-export const useAssignTicket = (queryKey = "waitlist") => {
+export const useAssignTicket = (queryKey = "waitlist-incident") => {
     const queryClient = useQueryClient();
     return useMutation(assignTicket, {
         onSuccess: () => {

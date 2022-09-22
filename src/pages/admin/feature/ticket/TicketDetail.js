@@ -1,4 +1,4 @@
-import {useNavigate, useParams} from "react-router-dom";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import {
     Avatar,
     Button,
@@ -35,6 +35,9 @@ import {useAddComments} from "../hooks/useAddComments";
 import {API_URL} from "../../../../global/axios";
 import moment from "moment";
 import useAuth from "../../../../auth/hook/useAuth";
+import {GET_ROUTE_WITH_ROLE} from "../../../../global/utils";
+import {GRAY_COLOR, PRIMARY_COLOR} from "../../../../global/colors";
+import VirtualList from 'rc-virtual-list';
 
 const {Panel} = Collapse;
 const {TextArea} = Input;
@@ -50,7 +53,12 @@ const fetchTicketComment = ({queryKey}) => {
 //fetch ticket history
 const fetchTicketHistory = ({queryKey}) => {
     let ticketId = queryKey[1];
-    return axios.get(API_URL + `history?item_id=${ticketId}`)
+    return axios.get(API_URL + `history?item_id=${ticketId}`);
+}
+//fetch relate Ticket
+const fetchRelatedTicket = ({queryKey}) => {
+    let ticketId = queryKey[1];
+    return axios.get(API_URL + `tickets/related/${ticketId}`);
 }
 
 function TicketDetail() {
@@ -65,8 +73,7 @@ function TicketDetail() {
     const [activity, setActivity] = useState("Commentaires"); // Manage segmented
 
     const {
-        data: ticket, isLoading,
-        refetch: refetchTicket
+        data: ticket, isLoading
     } = useGetTicketData(ticketId);//get ticket data
     const {mutate: editTitleandDescription} = useEditTicketTitleAndDescription();//edit ticket title and description
     const {mutate: addComments} = useAddComments(['ticketComment', ticketId]);//add comment
@@ -87,6 +94,12 @@ function TicketDetail() {
         refetch
     } = useQuery(["ticketHistory", ticketId], fetchTicketHistory, {
         enabled: false
+    })
+
+    const {
+        data: relatedTickets,
+    } = useQuery(["relatedTickets", ticketId], fetchRelatedTicket, {
+        enabled: ticket?.data.type.typeId === 1
     })
 
     //side effect, set title
@@ -119,7 +132,7 @@ function TicketDetail() {
                     content: <>
                         <TextArea row={10} style={{resize: "none"}} placeholder="Note de résolution"
                                   onChange={(e) => {
-                                      if (e.target.value.length <= 150){
+                                      if (e.target.value.length <= 150) {
                                           console.log(e.target.value.length);
                                           ticket.data.note = e.target.value;
                                       }
@@ -247,7 +260,7 @@ function TicketDetail() {
                     </Form>
                     <div>
                         <p>Activité</p>
-                        <Segmented options={['Commentaires', 'Historique']} onChange={(value) => setActivity(value)}/>
+                        <Segmented options={['Commentaires']} onChange={(value) => setActivity(value)}/>
                         {activity === "Commentaires" ?
                             <div className="comments">
                                 {loadingComment ? <CustomLoader/> : <CommentList comments={ticketCommentData?.data}/>}
@@ -358,6 +371,25 @@ function TicketDetail() {
                                 </Space>
                             </Panel>
                         </Collapse>
+                        {ticket?.data.type.typeId === 1 && <Card title="Tickets associés" headStyle={{
+                            backgroundColor: GRAY_COLOR
+                        }}>
+                            <List><VirtualList
+                                data={relatedTickets?.data}
+                                height={150}
+                                itemHeight={47}
+                                itemLayout="horizontal"
+                                size="large"
+                            >{(item) => (
+                                <List.Item key={item.id}>
+                                    <List.Item.Meta
+                                        title={<Link
+                                            to={`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/${item.type.typeId === 1 ? 'problems' : 'incidents'}/${item.id}`}>{item.title}</Link>}
+                                        description={item.description.toString()}
+                                    />
+                                </List.Item>
+                            )}</VirtualList></List>
+                        </Card>}
                     </Space>
                 </Col>
             </Row>
