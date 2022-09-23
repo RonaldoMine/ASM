@@ -39,7 +39,7 @@ const SideBar = () => {
     );
 
     return (
-        <Sider width={200} className="site-layout-background">
+        <Sider collapsible width={200} className="site-layout-background">
             <Menu
                 mode="inline"
                 defaultSelectedKeys={[menuParent+'_sub' + menuChild]}

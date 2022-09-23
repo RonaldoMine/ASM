@@ -1,6 +1,6 @@
 //imports
 import React, {useMemo, useRef, useState} from 'react'
-import {Avatar, Button, Form, Input, Layout, message, Modal, Select, Space, Spin, TreeSelect} from 'antd'
+import {AutoComplete, Avatar, Button, Form, Input, Layout, message, Modal, Select, Space, Spin, TreeSelect} from 'antd'
 import './NavBar.css';
 import logo from '../../../../assets/logoAFB.png';
 import {bellMenu, profileMenu} from './NavBarData';
@@ -15,6 +15,7 @@ import {useQuery} from "react-query";
 import {TICKET_LABEL_UNASSIGNED} from "../../../../global/statusTickets";
 import {ROLE_AGENT} from "../../../../global/roles";
 import debounce from 'lodash/debounce';
+import {GET_ROUTE_WITH_ROLE} from "../../../../global/utils";
 
 //instanciations
 const {Header} = Layout;
@@ -69,6 +70,21 @@ function fetchIncidentList(title) {
             })),
         );
 }
+function fetchSolvedWaitList(title, auth) {
+    let url;
+    if (auth.role === ROLE_AGENT) {
+        url = API_URL + `tickets/archives/list/${auth.username}?&source=${auth.agency}&title=`;
+    } else {
+        url = API_URL + `tickets/archives/list?&source=${auth.agency}&title=`;
+    }
+    return axios.get(url + title)
+        .then((body) =>
+            body.data.map((incident) => ({
+                label: `${incident.title}`,
+                value: incident.id,
+            })),
+        );
+}
 
 const NavBar = () => {
 
@@ -81,6 +97,7 @@ const NavBar = () => {
     const [treeSelectOpen, setTreeSelectOpen] = useState(false);
     const [typeTicket, setTypeTicket] = useState(0);
     const [incidents, setIncidents] = useState([]);
+    const [filterTickets, setFilterTickets] = useState([]);
     const {mutate: addTicket} = useAddTickets();
     const {auth, signOut} = useAuth();
     const navigate = useNavigate();
@@ -91,6 +108,7 @@ const NavBar = () => {
             setTreeData(data?.data.map((category) => genTreeNode(category)))
         }
     })
+
 
     const checkSubTree = (id) => {
         let matches = [];
@@ -134,7 +152,7 @@ const NavBar = () => {
                     source: auth.agency,
                     reporter: auth.username,
                     status: 'Nouveau',
-                    incidents : incidents,
+                    incidents: incidents,
                     type: auth.role === ROLE_AGENT ? 0 : value.type
                 });
                 form.resetFields()
@@ -144,7 +162,7 @@ const NavBar = () => {
                 setTypeTicket(0);
                 message.success("Ticket créé avec succès");
             }).catch((error) => {
-                console.log(error)
+            console.log(error)
             message.error("ticket non créé");
             setConfirmLoading(false);
         })
@@ -196,6 +214,8 @@ const NavBar = () => {
                             setTypeTicket(0);
                             setIncidents([]);
                             setIsOpen(true)
+                            setFilterTickets([])
+                            form.resetFields()
                         }}
                 >Créer un ticket</Button>
             </div>
@@ -233,7 +253,29 @@ const NavBar = () => {
                         name="title"
                         rules={[{required: true, message: 'Insérez un intitulé!'}]}
                     >
-                        <Input/>
+                        <AutoComplete
+                            onSelect={(value, option) => {
+                                setIsOpen(false);
+                                navigate(`/${GET_ROUTE_WITH_ROLE(auth.role)}/general/incidents/${option.key}`, {replace: true})
+                            }}
+                            onSearch={(value) => {
+                                if (value.length > 1) {
+                                    fetchSolvedWaitList(value, auth).then((response) => {
+                                        console.log(response);
+                                        setFilterTickets(response)
+                                    });
+                                }else {
+                                    setFilterTickets([]);
+                                }
+                            }}
+                            placeholder="Intitulé du ticket"
+                        >
+                            {filterTickets.map((ticket) => {
+                                return (<Option key={ticket.value} value={ticket.label}>
+                                    {ticket.label}
+                                </Option>)
+                            })}
+                        </AutoComplete>
                     </Form.Item>
 
                     <Form.Item
@@ -293,7 +335,7 @@ const NavBar = () => {
                     {typeTicket === 1 && <Form.Item label={"Incidents"} name={"incidents"} initialValue={incidents}>
                         <DebounceSelect
                             mode="multiple"
-                            value={"value"}
+                            value={""}
                             placeholder="Selectionner un ou plusieurs incidents"
                             fetchOptions={fetchIncidentList}
                             onChange={(newValue) => {
